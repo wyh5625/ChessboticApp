@@ -1,0 +1,67 @@
+{
+  "variant": {
+    "module": {
+      "rootBuildGradleFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE",
+      "sdkFolder": "C:\\Users\\wyh56\\AppData\\Local\\Android\\Sdk",
+      "isNativeCompilerSettingsCacheEnabled": false,
+      "isBuildOnlyTargetAbiEnabled": true,
+      "ideBuildTargetAbi": "arm64-v8a,armeabi-v7a,armeabi",
+      "splitsAbiFilterSet": [],
+      "intermediatesFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates",
+      "gradleModulePathName": ":app",
+      "moduleRootFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app",
+      "makeFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\src\\main\\jni\\Android.mk",
+      "buildSystem": "NDK_BUILD",
+      "compilerSettingsCacheFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\.cxx",
+      "cxxFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx",
+      "ndkFolder": "C:\\Users\\wyh56\\AppData\\Local\\Android\\Sdk\\ndk-bundle",
+      "ndkVersion": "19.0.5232133",
+      "ndkSupportedAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "ndkDefaultAbiList": [
+        "ARMEABI_V7A",
+        "ARM64_V8A",
+        "X86",
+        "X86_64"
+      ],
+      "cmakeToolchainFile": "."
+    },
+    "buildSystemArgumentList": [
+      "NDK_APPLICATION_MK:\u003dsrc/main/jni/Application.mk"
+    ],
+    "cFlagList": [
+      "-DTEST_C_FLAG1",
+      "-DTEST_C_FLAG2"
+    ],
+    "cppFlagsList": [
+      "-DTEST_CPP_FLAG2",
+      "-DTEST_CPP_FLAG2"
+    ],
+    "variantName": "debug",
+    "soFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\lib",
+    "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local",
+    "jsonFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug",
+    "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\cxx\\debug",
+    "isDebuggableEnabled": true,
+    "validAbiList": [
+      "ARM64_V8A",
+      "ARMEABI_V7A"
+    ],
+    "buildTargetSet": []
+  },
+  "abi": "ARMEABI_V7A",
+  "abiPlatformVersion": 21,
+  "cxxBuildFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a",
+  "jsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a\\android_gradle_build.json",
+  "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\cxx\\debug\\armeabi-v7a",
+  "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\armeabi-v7a",
+  "buildCommandFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a\\build_command.txt",
+  "buildOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a\\build_output.txt",
+  "modelOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a\\build_model.json",
+  "jsonGenerationLoggingRecordFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a\\json_generation_record.json",
+  "compileCommandsJsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\armeabi-v7a\\compile_commands.json"
+}

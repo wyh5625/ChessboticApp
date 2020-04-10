@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/BoardLayout"
+	android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center"
+	android:background="@android:color/background_dark" android:padding="1dp"
+>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g8" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h8" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g7" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h7" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g6" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h6" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g5" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h5" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g4" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h4" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g3" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h3" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g2" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h2" />
+</TableRow>
+<TableRow>
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/a1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/b1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/c1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/d1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/e1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/f1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/g1" />
+<com.example.ChessPlayerApp.chess.ChessImageView android:id="@+id/h1" />
+</TableRow>
+
+</TableLayout>

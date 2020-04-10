@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".robot_arm.RobotArmControllerActivity">
+
+    <ScrollView
+        android:id="@+id/chess_console_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <TableRow>
+                    <TextView android:layout_weight="1"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="a"
+                        android:textAlignment="center"/>
+
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="b"
+                        android:textAlignment="center"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="c"
+                        android:textAlignment="center"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="d"
+                        android:textAlignment="center"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="e"
+                        android:textAlignment="center"/>
+
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="f"
+                        android:textAlignment="center"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="g"
+                        android:textAlignment="center"/>
+                    <TextView
+                        android:layout_weight="1"
+                        android:text="h"
+                        android:textAlignment="center"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="8" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g8"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h8"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="7" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g7"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h7"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="6" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g6"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h6"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="5" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g5"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h5"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="4" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g4"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h4"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="3" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g3"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h3"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="2" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g2"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h2"/>
+                </TableRow>
+
+                <TableRow>
+                    <TextView android:layout_weight="1" android:layout_gravity="center" android:text="1" android:textAlignment="center"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/a1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/b1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/c1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/d1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/e1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/f1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/g1"/>
+                    <ImageButton android:layout_weight="1" android:layout_height="48dp" android:id="@+id/h1"/>
+                </TableRow>
+
+            </TableLayout>
+
+            <TextView
+                android:id="@+id/chess_console"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </ScrollView>
+
+</android.support.constraint.ConstraintLayout>
