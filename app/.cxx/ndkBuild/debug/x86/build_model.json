@@ -1,19 +1,19 @@
 {
   "variant": {
     "module": {
-      "rootBuildGradleFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE",
+      "rootBuildGradleFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE",
       "sdkFolder": "C:\\Users\\wyh56\\AppData\\Local\\Android\\Sdk",
       "isNativeCompilerSettingsCacheEnabled": false,
       "isBuildOnlyTargetAbiEnabled": true,
       "ideBuildTargetAbi": "x86",
       "splitsAbiFilterSet": [],
-      "intermediatesFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates",
+      "intermediatesFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates",
       "gradleModulePathName": ":app",
-      "moduleRootFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app",
-      "makeFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\src\\main\\jni\\Android.mk",
+      "moduleRootFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app",
+      "makeFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\src\\main\\jni\\Android.mk",
       "buildSystem": "NDK_BUILD",
-      "compilerSettingsCacheFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\.cxx",
-      "cxxFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx",
+      "compilerSettingsCacheFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\.cxx",
+      "cxxFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx",
       "ndkFolder": "C:\\Users\\wyh56\\AppData\\Local\\Android\\Sdk\\ndk-bundle",
       "ndkVersion": "19.0.5232133",
       "ndkSupportedAbiList": [
@@ -42,10 +42,10 @@
       "-DTEST_CPP_FLAG2"
     ],
     "variantName": "debug",
-    "soFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\lib",
-    "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local",
-    "jsonFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug",
-    "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\cxx\\debug",
+    "soFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\lib",
+    "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local",
+    "jsonFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug",
+    "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\cxx\\debug",
     "isDebuggableEnabled": true,
     "validAbiList": [
       "X86"
@@ -54,13 +54,13 @@
   },
   "abi": "X86",
   "abiPlatformVersion": 21,
-  "cxxBuildFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86",
-  "jsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\android_gradle_build.json",
-  "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\cxx\\debug\\x86",
-  "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\x86",
-  "buildCommandFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\build_command.txt",
-  "buildOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\build_output.txt",
-  "modelOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\build_model.json",
-  "jsonGenerationLoggingRecordFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\json_generation_record.json",
-  "compileCommandsJsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\android-fundamentals-starter-apps-v2-master\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\compile_commands.json"
+  "cxxBuildFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86",
+  "jsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\android_gradle_build.json",
+  "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\cxx\\debug\\x86",
+  "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\x86",
+  "buildCommandFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\build_command.txt",
+  "buildOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\build_output.txt",
+  "modelOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\build_model.json",
+  "jsonGenerationLoggingRecordFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\json_generation_record.json",
+  "compileCommandsJsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\x86\\compile_commands.json"
 }

@@ -28,7 +28,7 @@ import java.util.Random;
 
 
 public class TheEngine {
-    static boolean robotArmControl = true;
+    static boolean robotArmControl = false;
     static int wKingNeverMove, wKRNeverMove,wQRNeverMove,
             bKingNeverMove,bKRNeverMove,bQRNeverMove;
     static boolean whiteTurn, stopNow;
@@ -46,11 +46,11 @@ public class TheEngine {
     static int pawnBoard[]=
             { 500, 500, 500, 500, 500, 500, 500, 500,
                     50, 50, 50, 50, 50, 50, 50, 50,
-                    0,  0,  0,  0,  0,  0,  0,  0,
-                    0,  0,  0,  0,  0,  0,  0,  0,
-                    0,  0,  0, 10, 10,  0,  0,  0,
-                    10,  0, 10, 10, 10, 10,  0,  10,
-                    5, 10, 10,-10,-10, 10, 10,  5,
+                    10, 10, 20, 30, 30, 20, 10, 10,
+                    5, 5, 10,  25, 25, 10, 5, 5,
+                    0,  0,  0, 20, 20,  0,  0,  0,
+                    5,  -5, -10, 0, 0, -10,  -5,  5,
+                    5, 10, 10,-20,-20, 10, 10,  5,
                     0,  0,  0,  0,  0,  0,  0,  0};
     static int rookBoard[]=
             { 0,  0,  0,  0,  0,  0,  0,  0,
@@ -60,21 +60,21 @@ public class TheEngine {
                     -5,  0,  0,  0,  0,  0,  0, -5,
                     -5,  0,  0,  0,  0,  0,  0, -5,
                     -5,  0,  0,  0,  0,  0,  0, -5,
-                    1,  0,  0,  0,  0,  0,  0,  1,};
+                    0,  0,  0,  5,  5,  0,  0,  0,};
     static int knightBoard[]=
             {-50,-40,-30,-30,-30,-30,-40,-50,
                     -40,-20,  0,  0,  0,  0,-20,-40,
                     -30,  0, 10, 15, 15, 10,  0,-30,
-                    -30,  5, 15,  0,  0, 15,  5,-30,
-                    -30,  0, 15,  0,  0, 15,  0,-30,
+                    -30,  5, 15,  20,  20, 15,  5,-30,
+                    -30,  0, 15,  20,  20, 15,  0,-30,
                     -30,  5, 10, 15, 15, 10,  5,-30,
                     -40,-20,  0,  5,  5,  0,-20,-40,
-                    -50,-30,-30,-30,-30,-30,-30,-50};
+                    -50,-40,-30,-30,-30,-30,-40,-50};
     static int bishopBoard[]=
             {-20,-10,-10,-10,-10,-10,-10,-20,
                     -10,  0,  0,  0,  0,  0,  0,-10,
                     -10,  0,  5, 10, 10,  5,  0,-10,
-                    -20,  5,  5, 10, 10,  5,  5,-20,
+                    -10,  5,  5, 10, 10,  5,  5,-10,
                     -10,  0, 10, 10, 10, 10,  0,-10,
                     -10, 10, 10, 10, 10, 10, 10,-10,
                     -10,  5,  0,  0,  0,  0,  5,-10,
@@ -88,24 +88,15 @@ public class TheEngine {
                     -10,  5,  5,  5,  5,  5,  0,-10,
                     -10,  0,  5,  0,  0,  0,  0,-10,
                     -20,-10,-10, -5, -5,-10,-10,-20};
-    static int kingBoardW[]=
-            { 0,  0,  0,  0,  0,  0,  0,  0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  110,  -40,  0,  -40,  100,  0,  0,};
-    static int kingBoardB[]=
-            { 0,  0,  0,  0,  0,  0,  0,  0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  0,  0,  0,  0,  0, 0,
-                    0,  0,  110,  -40,  0,  -40,  100,  0,};
+    static int kingBoard[]=
+            { -30, -40, -40, -50, -50, -40, -40, -30,
+                    -30, -40, -40, -50, -50, -40, -40, -30,
+                    -30, -40, -40, -50, -50, -40, -40, -30,
+                    -30, -40, -40, -50, -50, -40, -40, -30,
+                    -20,  -30,  -30,  -40,  -40,  -30,  -30, -20,
+                    -10,  -20,  -20,  -20,  -20,  -20,  -20, -10,
+                    20, 20,  0,  0,  0,  0,  20, 20,
+                    20,  30,  10,  0,  0,  10,  30,  20,};
 
     public static String terminal (String s) {
         String term = "";
@@ -179,7 +170,9 @@ public class TheEngine {
             term = "movedNow";
         }  else if (s.startsWith("myMove")) {
             String part[] = s.split(",");
+            //("myMove", printBoard());
             makeMove(part[1], robotArmControl);
+            //("afterMyMove", printBoard());
             term = "moved";
             if (whiteTurn) {whiteTurn = false;} else {whiteTurn = true;}
         }
@@ -194,17 +187,25 @@ public class TheEngine {
         bKingNeverMove=0;bKRNeverMove=0;bQRNeverMove=0;
         whiteTurn=true;
         plyTurn = 0;
+
+        //stringBoard = "******K**P****P*PP****pP********p*N*****R********Q************rk";
+        //rewriteBoard();
+
         theBoard = new char[]{'R','N','B','Q','K','B','N','R','P','P','P','P','P','P','P','P','*','*','*','*',
                 '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
                 '*','*','*','*','*','p','p','p','p','p','p','p','p','r','n','b','q','k','b','n','r'};
+
+
         whiteKing=4;
         blackKing=60;
         return true;
     } // End New game.
 
     public static void callForMove(int engineStrength) {
+        //Log.d("callForMove", "Call for move: " + engineStrength);
         //Write down the board, before we start calculating moves.
         writeBoard();
+        //Log.d("callForMove", printBoard());
         if (engineStrength < 1) {
             // Random weak moves.
             String theMoves = allMoves(whiteTurn);
@@ -222,23 +223,34 @@ public class TheEngine {
             String bestMove = makeRatedMove(whiteTurn);
             // Make sure our board matches the board prior to a movePiece, in case it was
             // messed up when we calculated moves.
-            rewriteBoard();
+            //rewriteBoard();
             makeMove(bestMove, robotArmControl);
             plyTurn++;
         } else {
             // Engine strength is 2 or higher, so make a min/max movePiece.
             String bestMove = "";
-            stopNow = false;
-            if (whiteTurn) {bestMove = minimaxRoot(engineStrength, true);}
-            else {bestMove = minimaxRoot(engineStrength, false);}
+            stopNow = true;
+            bestMove = minimaxRoot(engineStrength, whiteTurn);
             // Make sure our board matches the board prior to a movePiece, in case it was
             // messed up when we calculated moves.
             rewriteBoard();
+            //Log.d("LastMove", "last move is: " + lastMove);
+            //Log.d("ThisMove", "next move is: " + bestMove);
+
+            //Log.d("AI move", "isKingSafe:  " + isKingSafe());
+            //Log.d("AI move", "print board before move:  " + printBoard());
+            //Log.d("ThisMove", "next move is: " + bestMove);
             makeMove(bestMove, robotArmControl);
+
+            //Log.d("AI move", "move:  " + lastMove);
+            //Log.d("AI move", "print board after move:  " + printBoard());
+            //Log.d("AI move", "isKingSafe:  " + isKingSafe());
+            //Log.d("make-move", bestMove);
+            //Log.d("make-move", printBoard());
             plyTurn++;
         }
         // Trade sides after making a movePiece....
-        if (whiteTurn) {whiteTurn = false;} else {whiteTurn = true;}
+        whiteTurn = !whiteTurn;
     } // End call for movePiece....
 
     public static void writeBoard() {
@@ -261,72 +273,118 @@ public class TheEngine {
         if (wturn){bestValue=-9999;} else {bestValue=9999;}
         for (int i = 0; i < movesSize; i++) {
             String newGameMove = theMoves.substring(i*7, (i*7)+7);
+            String lastMove_curr = lastMove;
             makeMove(newGameMove, false);
+            //Log.d("makeMove", newGameMove);
+            //Log.d("makeMove", printBoard());
             int boardValue = rating(movesSize,wturn);
             // Debugging only //Log.i("WJH", "Made movePiece, rating = "+newGameMove + String.valueOf(boardValue));// Debugging only //
+
             undoMove(newGameMove);
+            lastMove = lastMove_curr;
+            //Log.d("undoMove", printBoard());
             if (wturn && boardValue > bestValue) {
                 bestValue = boardValue;
                 bestMove = newGameMove;
             } else if (!wturn && boardValue < bestValue) {
                 bestValue = boardValue;
                 bestMove = newGameMove;}}
+
+        //Log.d("afterRatedMove", printBoard());
         return bestMove;
     } // End rated movePiece
 
+
     public static String minimaxRoot(int depth, boolean wturn) {
-        String bestMove = "";
-        int bestValue;
-        if (wturn) {bestValue = -9999;} else {bestValue = 9999;}
-        String theMoves = allMoves(wturn);
+        MoveValue bestMove;
+        if (wturn)
+            bestMove = maxvalue(Integer.MIN_VALUE, Integer.MAX_VALUE, depth);
+        else
+            bestMove = minvalue(Integer.MIN_VALUE, Integer.MAX_VALUE, depth);
+        //Log.d("MoveValue", "Eval = " + bestMove.value);
+        return bestMove.move;
+
+        }
+
+    public static MoveValue maxvalue(int alpha, int beta, int depth){
+        //Log.d("callForMove", "MaxValue depth: " + depth);
+        MoveValue bestMove = new MoveValue();
+        bestMove.value = Integer.MIN_VALUE;
+        bestMove.move = "none";
+        //whiteTurn = true;
+        String theMoves = allMoves(true);
         int theseMovesSize = theMoves.length()/7;
-        int boardValue;
 
-        for (int i = 0; i < theseMovesSize; i++) {
-            String newGameMove = theMoves.substring(i*7, (i*7)+7);
-            makeMove(newGameMove, false);
-            String alternateMove = makeRatedMove(!wturn);
-            makeMove(alternateMove, false);
-            boardValue = minimax(bestValue,theseMovesSize,depth-1,wturn);
-            undoMove(alternateMove);
-            undoMove(newGameMove);
-            if (wturn && boardValue > bestValue) {
-                bestValue = boardValue;
-                bestMove = newGameMove;
-            } else if (!wturn && boardValue < bestValue) {
-                bestValue = boardValue;
-                bestMove = newGameMove;}}
-        return bestMove;} // End min/max.
-
-    public static int minimax(int bestValue,int movesSize, int depth, boolean wturn) {
-
-        if (stopNow) {
-            if (depth < 1) {
-                // Debugging only // Log.i("WJH", "rating = " + String.valueOf(rating(movesSize,wturn)));
-                // Debugging only // Log.i("WJH", "board=" + Arrays.toString(theBoard));
-                return rating(movesSize,wturn);
-            } else if (depth > 0) {
-                String theMoves = allMoves(wturn);
-                int theseMovesSize = theMoves.length() / 7;
-
-                for (int i = 0; i < theseMovesSize; i++) {
-                    String newGameMove = theMoves.substring(i * 7, (i * 7) + 7);
-                    makeMove(newGameMove, false);
-                    String alternateMove = makeRatedMove(!wturn);
-                    makeMove(alternateMove, false);
-                    minimax(bestValue, movesSize, depth - 1, !wturn);
-                    undoMove(alternateMove);
-                    undoMove(newGameMove);
+        if (depth < 1 || theseMovesSize == 0){  // terminal state
+            bestMove.value = rating(theseMovesSize,true);
+        }else{
+            MoveValue currentMove;
+            for (int i = 0; i < theseMovesSize; i++) {
+                String newGameMove = theMoves.substring(i * 7, (i * 7) + 7);
+                String lastMove_curr = lastMove;
+                makeMove(newGameMove, false);
+                // get value of child
+                currentMove = minvalue(alpha, beta, depth - 1);
+                undoMove(newGameMove);
+                lastMove = lastMove_curr;
+                if (currentMove.value > bestMove.value) {
+                    bestMove.value = currentMove.value;
+                    bestMove.move = newGameMove;
                 }
-            }}return rating(movesSize,wturn);} // End min/max.
+                if (bestMove.value >= beta)
+                    return bestMove;
+
+                if (bestMove.value > alpha)
+                    alpha = bestMove.value;
+
+            }
+
+        }
+        return bestMove;
+    }
+
+
+    public static MoveValue minvalue(int alpha, int beta, int depth){
+        MoveValue bestMove = new MoveValue();
+        bestMove.value = Integer.MAX_VALUE;
+        bestMove.move = "none";
+
+        String theMoves = allMoves(false);
+        int theseMovesSize = theMoves.length()/7;
+
+        if (depth < 1 || theseMovesSize == 0){  // terminal state
+            bestMove.value = rating(theseMovesSize,false);
+        }else{
+            MoveValue currentMove;
+            for (int i = 0; i < theseMovesSize; i++) {
+                String newGameMove = theMoves.substring(i * 7, (i * 7) + 7);
+                String lastMove_curr = lastMove;
+                makeMove(newGameMove, false);
+                // get value of child
+                currentMove = maxvalue(alpha, beta, depth - 1);
+                undoMove(newGameMove);
+                lastMove = lastMove_curr;
+                if (currentMove.value < bestMove.value) {
+                    bestMove.value = currentMove.value;
+                    bestMove.move = newGameMove;
+                }
+                if (bestMove.value <= alpha)
+                    return bestMove;
+
+                if (bestMove.value < beta)
+                    beta = bestMove.value;
+            }
+        }
+        return bestMove;
+    }
 
     public static int rating(int list, boolean wTurn) {
         int counter=0;
         if (wTurn){
-            counter+=rateMoveablitly(list);
+            //counter+=rateMoveablitly(list);
             counter+=ratePositional(wTurn);
         } else {
-            counter-=rateMoveablitly(list);
+            //counter-=rateMoveablitly(list);
             counter-=ratePositional(wTurn);
         }
         counter+=rateMaterial();
@@ -351,33 +409,35 @@ public class TheEngine {
         if (wturn) {
             for (int i=0;i<64;i++) {
                 switch (theBoard[i]) {
-                    case 'P': counter+=pawnBoard[63-i];
+                    // mirror the element due to the back problem
+                    // fomula: 63 - 8j - (7 - i)
+                    case 'P': counter+=pawnBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'R': counter+=rookBoard[63-i];
+                    case 'R': counter+=rookBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'N': counter+=knightBoard[63-i];
+                    case 'N': counter+=knightBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'B': counter+=bishopBoard[63-i];
+                    case 'B': counter+=bishopBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'Q': counter+=queenBoard[63-i];
+                    case 'Q': counter+=queenBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'K': counter+=kingBoardW[63-i];
+                    case 'K': counter+=kingBoard[63-8*(i/8)-(7-i%8)];
                         break;
                 }
             } } else {
             for (int i=0;i<64;i++) {
                 switch (theBoard[i]) {
-                    case 'p': counter+=pawnBoard[i];
+                    case 'p': counter+=pawnBoard[8*(i/8)+(7-i%8)];
                         break;
-                    case 'r': counter+=rookBoard[i];
+                    case 'r': counter+=rookBoard[8*(i/8)+(7-i%8)];
                         break;
-                    case 'n': counter+=knightBoard[i];
+                    case 'n': counter+=knightBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'b': counter+=bishopBoard[i];
+                    case 'b': counter+=bishopBoard[8*(i/8)+(7-i%8)];
                         break;
-                    case 'q': counter+=queenBoard[i];
+                    case 'q': counter+=queenBoard[63-8*(i/8)-(7-i%8)];
                         break;
-                    case 'k': counter+=kingBoardB[i];
+                    case 'k': counter+=kingBoard[8*(i/8)+(7-i%8)];
                         break;
                 }
             }
@@ -392,13 +452,13 @@ public class TheEngine {
             switch (theBoard[i]) {
                 case 'N': materialScore = materialScore + 300;break;
                 case 'R': materialScore = materialScore + 500;break;
-                case 'B': materialScore = materialScore + 350;break;
+                case 'B': materialScore = materialScore + 300;break;
                 case 'Q': materialScore = materialScore + 900;break;
                 case 'K': materialScore = materialScore + 9000;break;
                 case 'P': materialScore = materialScore + 100;break;
                 case 'n': materialScore = materialScore - 300;break;
                 case 'r': materialScore = materialScore - 500;break;
-                case 'b': materialScore = materialScore - 350;break;
+                case 'b': materialScore = materialScore - 300;break;
                 case 'q': materialScore = materialScore - 900;break;
                 case 'k': materialScore = materialScore - 9000;break;
                 case 'p': materialScore = materialScore - 100;break;
@@ -409,12 +469,13 @@ public class TheEngine {
     } // End rateMaterial.
 
     public static void makeMove(String move, boolean RAMove) {
-        Log.d("RA move", "Robot arm move: " + move);
+        //Log.d("RA move", "Robot arm move: " + move);
         /*
          * In theory, if there are no moves, then you are in checkmate or stalemate....
          */
         // Debugging only // Log.i("WJH", "Move="+movePiece);
         lastMove = move;
+        //Log.d("LastMove", "last move is: " + lastMove);
         checkStaleMate = false;
         int to,from,other;
         char piece, promote;
@@ -430,7 +491,7 @@ public class TheEngine {
             promote = move.charAt(2);
             piece = move.charAt(0);
             // Robotic Arm
-            if ("k-0-0r".equals(move)) {
+            if (move.startsWith("k-0-0r")) {
                 if (RAMove){
                     // RA movement
                     myRoboticArm.movePiece(60, 62);
@@ -442,7 +503,7 @@ public class TheEngine {
                 theBoard[62] = 'k';
                 theBoard[61] = 'r';
                 // specific RA movement
-            } else if ("k0-0-0".equals(move)) {
+            } else if (move.startsWith("k0-0-0")) {
                 if (RAMove) {
                     // RA movement
                     myRoboticArm.movePiece(60, 58);
@@ -454,7 +515,7 @@ public class TheEngine {
                 theBoard[58] = 'k';
                 theBoard[59] = 'r';
                 theBoard[57] = '*';
-            } else if ("K-0-0R".equals(move)) {
+            } else if (move.startsWith("K-0-0R")) {
                 if (RAMove) {
                     // RA movement
                     myRoboticArm.movePiece(4, 6);
@@ -466,7 +527,7 @@ public class TheEngine {
                 theBoard[5] = 'R';
                 theBoard[4] = '*';
                 wKingNeverMove++;
-            } else if ("K0-0-0".equals(move)) {
+            } else if (move.startsWith("K0-0-0")) {
                 if (RAMove) {
                     // RA movement
                     myRoboticArm.movePiece(4, 2);
@@ -661,52 +722,52 @@ public class TheEngine {
         } else { // undo turn moves....
             piece = move.charAt(0);
             take = move.charAt(5);
-            if ("k-0-0r".equals(move)) {
+            if (move.startsWith("k-0-0r")) {
                 theBoard[60] = 'k';
                 theBoard[63] = 'r';
                 theBoard[61] = '*';
                 theBoard[62] = '*';
                 bKingNeverMove--;
-            } else if ("k0-0-0".equals(move)) {
+            } else if (move.startsWith("k0-0-0")) {
                 theBoard[60] = 'k';
                 theBoard[56] = 'r';
                 theBoard[58] = '*';
                 theBoard[59] = '*';
                 theBoard[57] = '*';
                 bKingNeverMove--;
-            } else if ("K-0-0R".equals(move)) {
+            } else if (move.startsWith("K-0-0R")) {
                 theBoard[5] = '*';
                 theBoard[6] = '*';
                 theBoard[4] = 'K';
                 theBoard[7] = 'R';
                 wKingNeverMove--;
-            } else if ("K0-0-0".equals(move)) {
+            } else if (move.startsWith("K0-0-0")) {
                 theBoard[1] = '*';
                 theBoard[2] = '*';
                 theBoard[4] = 'K';
                 theBoard[0] = 'R';
                 theBoard[3] = '*';
                 wKingNeverMove--;
-            } else if ("k-0-0r,".equals(move)) {
+            } else if (move.startsWith("k-0-0r")) {
                 theBoard[60] = 'k';
                 theBoard[63] = 'r';
                 theBoard[61] = '*';
                 theBoard[62] = '*';
                 bKingNeverMove--;
-            } else if ("k0-0-0,".equals(move)) {
+            } else if (move.startsWith("k0-0-0")) {
                 theBoard[60] = 'k';
                 theBoard[56] = 'r';
                 theBoard[58] = '*';
                 theBoard[59] = '*';
                 theBoard[57] = '*';
                 bKingNeverMove--;
-            } else if ("K-0-0R,".equals(move)) {
+            } else if (move.startsWith("K-0-0R")) {
                 theBoard[5] = '*';
                 theBoard[6] = '*';
                 theBoard[4] = 'K';
                 theBoard[7] = 'R';
                 wKingNeverMove--;
-            } else if ("K0-0-0,".equals(move)) {
+            } else if (move.startsWith("K0-0-0")) {
                 theBoard[1] = '*';
                 theBoard[2] = '*';
                 theBoard[4] = 'K';
@@ -721,14 +782,14 @@ public class TheEngine {
                             to = Integer.parseInt(move.substring(3, 5));
                             from = to-7;
                             other = to-8;
-                            theBoard[to] = take;
+                            theBoard[to] = '*';
                             theBoard[from] = 'P';
                             theBoard[other] = 'p';
                         } else if (move.charAt(2)=='R') {
                             to = Integer.parseInt(move.substring(3, 5));
                             from = to-9;
                             other = to-8;
-                            theBoard[to] = take;
+                            theBoard[to] = '*';
                             theBoard[from] = 'P';
                             theBoard[other] = 'p';}
                     } else if (move.charAt(1)=='u') {
@@ -757,16 +818,16 @@ public class TheEngine {
                     if (move.charAt(1)=='e') {
                         if (move.charAt(2)=='l') {
                             to = Integer.parseInt(move.substring(3, 5));
-                            from = to-7;
-                            other = to-8;
-                            theBoard[to] = take;
+                            from = to+9;
+                            other = to+8;
+                            theBoard[to] = '*';
                             theBoard[from] = 'p';
                             theBoard[other] = 'P';
                         } else if (move.charAt(2)=='r') {
                             to = Integer.parseInt(move.substring(3, 5));
-                            from = to-9;
-                            other = to-8;
-                            theBoard[to] = take;
+                            from = to+7;
+                            other = to+8;
+                            theBoard[to] = '*';
                             theBoard[from] = 'p';
                             theBoard[other] = 'P';}
                     } else if (move.charAt(1)=='u') {
@@ -808,6 +869,7 @@ public class TheEngine {
                     to = Integer.parseInt(move.substring(3, 5));
                     theBoard[to] = take;
                     theBoard[from] = piece;
+                    //Log.d("UndoQueen", "recover Queen on position: " + from);
                     if (to == 00) {wQRNeverMove--;}
                     if (to == 07) {wKRNeverMove--;}
                     if (to == 56) {bQRNeverMove--;}
@@ -817,6 +879,7 @@ public class TheEngine {
     } // End undo moves
 
     public static String allMoves(boolean wTurn) {
+        //Log.d("allMoves", printBoard());
         String list = "";
         if (wTurn){
             for (int i = 0; i < 64; i++) {
@@ -839,6 +902,8 @@ public class TheEngine {
                     case 'p': list+=pawnMovesB(i);break;
                 }
             }}
+
+        //Log.d("afterAllMove_in", printBoard());
         //Debugging only // Log.i("WJH", list);
         return list;
         /*
@@ -915,11 +980,15 @@ public class TheEngine {
             if (z < 56) {
                 k = z + (vert * j);
             }
+            //Log.d("ISKINGSAFE", printBoard());
+            //Log.d("ISKINGSAFE", "whiteKing: " + whiteKing + " " + theBoard[k]);
             while (theBoard[k] == '*' && notI) {
                 vert += 8;
                 if (k < 56) {
                     k = z + (vert * j);
-                } else {notI = false;}} // While it's empty.
+                } else {notI = false;}
+                //Log.d("ISKINGSAFE", "the above piece: " + theBoard[k]);
+            } // While it's empty.
             if (theBoard[k]=='r'||theBoard[k]=='q') {
                 return false;} // When there is an enemy..
 
@@ -1711,7 +1780,11 @@ public class TheEngine {
                     } else { blackKing = 60; }
                 } else { blackKing = 60; }
             }
+
+            // make sure king is recovered back
+            blackKing = 60;
         }
+
 
         // Castle moves //
         return list;
@@ -1733,7 +1806,7 @@ public class TheEngine {
             }
         } else if (h == 3) {
             // The rule of en passant...
-            if (lastMove.charAt(0) == 'P') {
+            if (lastMove.charAt(0) == 'P' && !lastMove.startsWith("PE") && !lastMove.startsWith("Pu") && !lastMove.startsWith("Pl") && !lastMove.startsWith("Pr")) {
                 int tempTo = Integer.parseInt(lastMove.substring(3, 5));
                 int tempFm = Integer.parseInt(lastMove.substring(1, 3));
                 if (tempFm / 8 == 1 && tempTo / 8 == 3) { // They did a double step.
@@ -1745,14 +1818,14 @@ public class TheEngine {
                             list = list + "per" + String.valueOf(i - 7) + "P,";
                         }
                         theBoard[i + 1] = 'P';
-                        theBoard[i - 9] = '*';
+                        theBoard[i - 7] = '*';
                         theBoard[i] = 'p';
                     } else if (tempTo == i - 1) { // They are on your left.
                         theBoard[i - 9] = 'p';
                         theBoard[i] = '*';
                         theBoard[i - 1] = '*';
                         if (isKingSafe()) {
-                            list = list + "pel" + String.valueOf(i - 9) + "P,";
+                            list = list + "pel" + String.valueOf(i - 7) + "P,";
                         }
                         theBoard[i - 1] = 'P';
                         theBoard[i - 9] = '*';
@@ -2091,6 +2164,18 @@ public class TheEngine {
             moveSquare = String.valueOf(theBoard[k]);
             theBoard[k] = 'B';
             theBoard[i] = '*';
+            //Log.d("BishopMoves", "Test whether king is safe after white Bishop move");
+            //Log.d("BishopMoves", "bitshop move to: " + k);
+            //Log.d("BishopMoves", "isKingSafe:  " + isKingSafe());
+            /*
+            if(k == 27){
+                whiteTurn = true;
+                Log.d("BishopMoves", "Test whether king is safe after white Bishop move");
+                Log.d("BishopMoves", printBoard());
+                Log.d("BishopMoves", "isKingSafe:  " + isKingSafe());
+            }
+
+             */
             if (isKingSafe()) {
                 String F = String.valueOf(i);
                 String T = String.valueOf(k);
@@ -2363,7 +2448,12 @@ public class TheEngine {
                     if (isKingSafe()) {
                         list = list + "K0-0-0,";
                     } else { whiteKing = 4; }
-                } else { whiteKing = 4; }}}
+                } else { whiteKing = 4; }}
+            // make sure whiteKing is recovered back
+            whiteKing = 4;
+        }
+
+
 
         // Castle moves //
         return list;
@@ -2382,7 +2472,7 @@ public class TheEngine {
                 // The double step from the home row.
                 theseMoves.add(j);}
         } else if (h == 4) {
-            if (lastMove.charAt(0)=='p') {
+            if (lastMove.charAt(0)=='p' && !lastMove.startsWith("pe") && !lastMove.startsWith("pu") && !lastMove.startsWith("pl") && !lastMove.startsWith("pr")) {
                 int tempTo = Integer.parseInt(lastMove.substring(3,5));
                 int tempFm = Integer.parseInt(lastMove.substring(1,3));
                 if (tempFm / 8 == 6 && tempTo / 8 == 4) { // The did a double step.
@@ -2472,6 +2562,14 @@ public class TheEngine {
         }
         return list;
     } // End pawn moves.
+
+    public static String printBoard(){
+        String re = "";
+        for(int i = 0; i < 64; i ++){
+            re = re + theBoard[i];
+        }
+        return re;
+    }
 
 } // End The engine.
 

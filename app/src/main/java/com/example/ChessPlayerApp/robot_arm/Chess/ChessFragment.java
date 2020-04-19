@@ -4,10 +4,12 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.ImageView;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -48,15 +50,21 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
     private Button resetButton;
 
-    static int engineStrength;
+    static int engineStrength = 4;
     boolean wTurn, firstClick;
     String tryMove;
 
     static String moveOptions;
     static int firstNum;
 
-    static boolean pBlack = false;
+    static boolean pBlack = true;
     static boolean pPass = false;
+
+    static TextView mConsole;
+    static Button viewBoardBtn;
+    static Button isKingSafeBtn;
+    static Button whiteTurn;
+    static Button whiteKing;
 
     public static ChessFragment getInstance(){
         if (instance == null)
@@ -71,12 +79,51 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         resetButton = root.findViewById(R.id.resetButton);
         resetButton.setOnClickListener(this);
 
+        mConsole = root.findViewById(R.id.console);
+        viewBoardBtn = root.findViewById(R.id.showBoard);
+        isKingSafeBtn = root.findViewById(R.id.isKingSafe);
+        whiteTurn = root.findViewById(R.id.whiteTurn);
+        whiteKing = root.findViewById(R.id.whiteKing);
+        viewBoardBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                print(TheEngine.printBoard());
+            }
+        });
+        isKingSafeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TheEngine.whiteTurn = !TheEngine.whiteTurn;
+                print("is W King safe: " + TheEngine.isKingSafe());
+                TheEngine.whiteTurn = !TheEngine.whiteTurn;
+            }
+        });
+
+        whiteTurn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                print("last move : " + TheEngine.lastMove);
+            }
+        });
+        whiteKing.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                print("white King: " + TheEngine.whiteKing);
+            }
+        });
+
+
         // Declare all of our image views programatically.
         for (int i=0; i<64; i++) {
             chessImage[i]=root.findViewById(imageViews[i]);
             chessImage[i].setOnClickListener(this);
         } // checker board.
         return root;
+    }
+
+    public static void print(final String msg) {
+        mConsole.append(msg + "\n");
+        //mScrollView.scrollTo(0, mConsole.getBottom());
     }
 
     public void initChess(){
@@ -96,7 +143,6 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
             // Since this is not a pass and play game, and you chose to play as
             // black, then call movePiece for the computer.
             getNextMove();
-            wTurn = false;
         }
     }
 
@@ -120,9 +166,17 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                 // Have an exception clause so you don't crash.
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.d("ExceptionHappen", "Pls check the error");
                 return "Exception";
             }
             return "Pass";
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            drawBoardPieces();
+            wTurn = !wTurn;
         }
     }// End asyncronous task of finding a movePiece....
 
@@ -132,11 +186,12 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         String result = null;
         try {
             // execute, or go on and do that task.
-            result = task.execute("done").get();
+            result=  task.execute("done").get();
             // A fail clause.
         } catch (Exception e) {
             e.printStackTrace();
         }
+        /*
         if (result=="Pass"){
             if (wTurn) {
                 wTurn = false;
@@ -144,13 +199,15 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                 wTurn = true;
             }
             // draw the board.
-            drawBoardPieces();
+
             // rename the movePiece button.
         } else {
             // Try again, but weaker.
             engineStrength=engineStrength-1;
             getNextMove();
         }
+
+         */
     } // End get next movePiece.
 
     public void buttonNextMove (View view) {
@@ -214,6 +271,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
     } // End next movePiece buton.
 
     public void moveablePiece (int pos){
+        if (pBlack == wTurn)
+            return;
 
         int number = pos;
         String played;
@@ -224,6 +283,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         }
 
         if (firstClick) {
+
+            boolean validMove = false;
 
             int minusNum = number-firstNum;
             int plusNum = firstNum-number;
@@ -237,7 +298,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
             // it's a valid move, then make a move (user move && computer move), also make Robotic arm move
             if (Arrays.asList(separated).contains(myMove)) {
-
+                validMove = true;
                 String query = terminal("myMove,"+myMove);
                 drawBoardPieces();
                 wTurn = !wTurn;
@@ -253,7 +314,9 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                     if (moveOptions.isEmpty()) {
                         staleOrCheckMate();
                     } else {
+                        Log.d("getnext", "Call Computer - GetNextMove");
                         getNextMove();
+                        Log.d("getnext", "Finish Computer - GetNextMove");
                     }
                 }
 
@@ -315,7 +378,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                 }
 
                 if (Arrays.asList(separated).contains(myMove)) {
-
+                    validMove = true;
                     String query = terminal("myMove," + myMove);
                     drawBoardPieces();
                     wTurn = !wTurn;
@@ -331,7 +394,9 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                         if (moveOptions.isEmpty()) {
                             staleOrCheckMate();
                         } else {
+                            Log.d("getnext", "Call Computer - GetNextMove");
                             getNextMove();
+                            Log.d("getnext", "Finish Computer - GetNextMove");
                         }
                     }
 
@@ -339,9 +404,13 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
             }
             tryMove = "";
             myMove = "";
-            drawBoardPieces();
+            if (!validMove) {
+                drawBoardPieces();
+                validMove = false;
+            }
 
-        } else {
+        } else
+            {
             firstNum = number;
             try {
                 chessImage[firstNum].setBackgroundResource(R.drawable.highlight);
@@ -350,6 +419,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                 // Testing only // Log.i("WJH", tryMove);
                 String query = terminal("pieceMoves,"+ String.valueOf(theBoard[number]) +
                         "," + played);
+                //Log.d("All move", "Available move of the piece: " + query);
                 String[] stringArray = query.split(",");
                 if (stringArray.length > 0) {
                     for (int i=0; i<stringArray.length; i++) {
