@@ -33,6 +33,7 @@ public class TheEngine {
             bKingNeverMove,bKRNeverMove,bQRNeverMove;
     static boolean whiteTurn, stopNow;
     static boolean checkStaleMate = false;
+    static boolean blackAsAI = true;
     static boolean checkMate = false;
     static int whiteKing, blackKing, plyTurn;
     static String promoteToW = "Q", getPromoteToB = "q", lastMove = "xxxxxx",
@@ -188,12 +189,14 @@ public class TheEngine {
         whiteTurn=true;
         plyTurn = 0;
 
-        //stringBoard = "******K**P****P*PP****pP********p*N*****R********Q************rk";
+        //stringBoard = "***R***RPPK**PPP*****Q**k**********p*******np****p*****B***B***N";
         //rewriteBoard();
 
         theBoard = new char[]{'R','N','B','Q','K','B','N','R','P','P','P','P','P','P','P','P','*','*','*','*',
                 '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
                 '*','*','*','*','*','p','p','p','p','p','p','p','p','r','n','b','q','k','b','n','r'};
+
+
 
 
         whiteKing=4;
@@ -312,11 +315,11 @@ public class TheEngine {
         bestMove.value = Integer.MIN_VALUE;
         bestMove.move = "none";
         //whiteTurn = true;
-        String theMoves = allMoves(true);
+        String theMoves = allMoves(whiteTurn);
         int theseMovesSize = theMoves.length()/7;
 
         if (depth < 1 || theseMovesSize == 0){  // terminal state
-            bestMove.value = rating(theseMovesSize,true);
+            bestMove.value = rating(theseMovesSize,whiteTurn);
         }else{
             MoveValue currentMove;
             for (int i = 0; i < theseMovesSize; i++) {
@@ -349,11 +352,11 @@ public class TheEngine {
         bestMove.value = Integer.MAX_VALUE;
         bestMove.move = "none";
 
-        String theMoves = allMoves(false);
+        String theMoves = allMoves(!whiteTurn);
         int theseMovesSize = theMoves.length()/7;
 
         if (depth < 1 || theseMovesSize == 0){  // terminal state
-            bestMove.value = rating(theseMovesSize,false);
+            bestMove.value = rating(theseMovesSize,whiteTurn);
         }else{
             MoveValue currentMove;
             for (int i = 0; i < theseMovesSize; i++) {
@@ -382,12 +385,15 @@ public class TheEngine {
         int counter=0;
         if (wTurn){
             //counter+=rateMoveablitly(list);
-            counter+=ratePositional(wTurn);
-        } else {
+            counter+=rateMaterial();
+            counter+=ratePositional();
+
+        } else {    // the default evaluation is for white's advantage
             //counter-=rateMoveablitly(list);
-            counter-=ratePositional(wTurn);
+            counter-=rateMaterial();
+            counter-=ratePositional();
         }
-        counter+=rateMaterial();
+
         // Debugging only //Log.i("WJH", "Total Counter="+String.valueOf(counter));
         return counter;
     } // End rating
@@ -404,44 +410,54 @@ public class TheEngine {
             return counter;
         }return counter;} // Rate moveability....
 
-    public static int ratePositional(boolean wturn) {
+    public static int ratePositional() {
+        // Consider advantage for white, thus need to minus block piece score
         int counter=0;
-        if (wturn) {
             for (int i=0;i<64;i++) {
                 switch (theBoard[i]) {
                     // mirror the element due to the back problem
                     // fomula: 63 - 8j - (7 - i)
-                    case 'P': counter+=pawnBoard[63-8*(i/8)-(7-i%8)];
+                    case 'P':
+                        counter += pawnBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'R': counter+=rookBoard[63-8*(i/8)-(7-i%8)];
+                    case 'R':
+                        counter += rookBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'N': counter+=knightBoard[63-8*(i/8)-(7-i%8)];
+                    case 'N':
+                        counter += knightBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'B': counter+=bishopBoard[63-8*(i/8)-(7-i%8)];
+                    case 'B':
+                        counter += bishopBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'Q': counter+=queenBoard[63-8*(i/8)-(7-i%8)];
+                    case 'Q':
+                        counter += queenBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'K': counter+=kingBoard[63-8*(i/8)-(7-i%8)];
+                    case 'K':
+                        counter += kingBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                }
-            } } else {
-            for (int i=0;i<64;i++) {
-                switch (theBoard[i]) {
-                    case 'p': counter+=pawnBoard[8*(i/8)+(7-i%8)];
+
+                    case 'p':
+                        counter -= pawnBoard[8 * (i / 8) + (7 - i % 8)];
                         break;
-                    case 'r': counter+=rookBoard[8*(i/8)+(7-i%8)];
+                    case 'r':
+                        counter -= rookBoard[8 * (i / 8) + (7 - i % 8)];
                         break;
-                    case 'n': counter+=knightBoard[63-8*(i/8)-(7-i%8)];
+                    case 'n':
+                        counter -= knightBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'b': counter+=bishopBoard[8*(i/8)+(7-i%8)];
+                    case 'b':
+                        counter -= bishopBoard[8 * (i / 8) + (7 - i % 8)];
                         break;
-                    case 'q': counter+=queenBoard[63-8*(i/8)-(7-i%8)];
+                    case 'q':
+                        counter -= queenBoard[63 - 8 * (i / 8) - (7 - i % 8)];
                         break;
-                    case 'k': counter+=kingBoard[8*(i/8)+(7-i%8)];
+                    case 'k':
+                        counter -= kingBoard[8 * (i / 8) + (7 - i % 8)];
                         break;
                 }
             }
-        }
+
+
         // Debugging only //Log.i("WJH", "Positional Counter="+String.valueOf(counter));
         return counter;
     }// End rate positional

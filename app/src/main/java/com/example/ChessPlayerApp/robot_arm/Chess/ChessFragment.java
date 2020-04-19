@@ -50,7 +50,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
     private Button resetButton;
 
-    static int engineStrength = 4;
+    static int engineStrength = 3;
     boolean wTurn, firstClick;
     String tryMove;
 
@@ -143,6 +143,18 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
             // Since this is not a pass and play game, and you chose to play as
             // black, then call movePiece for the computer.
             getNextMove();
+            wTurn = !wTurn;
+        }
+
+        moveOptions="";
+        if (!wTurn){
+            moveOptions= terminal("suggestMove,black");
+        } else {
+            moveOptions= terminal("suggestMove,white");
+        }
+
+        if (moveOptions.isEmpty()) {
+            staleOrCheckMate();
         }
     }
 
@@ -176,7 +188,6 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             drawBoardPieces();
-            wTurn = !wTurn;
         }
     }// End asyncronous task of finding a movePiece....
 
@@ -314,9 +325,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                     if (moveOptions.isEmpty()) {
                         staleOrCheckMate();
                     } else {
-                        Log.d("getnext", "Call Computer - GetNextMove");
                         getNextMove();
-                        Log.d("getnext", "Finish Computer - GetNextMove");
+                        wTurn = !wTurn;
                     }
                 }
 
@@ -394,9 +404,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                         if (moveOptions.isEmpty()) {
                             staleOrCheckMate();
                         } else {
-                            Log.d("getnext", "Call Computer - GetNextMove");
                             getNextMove();
-                            Log.d("getnext", "Finish Computer - GetNextMove");
+                            wTurn = !wTurn;
                         }
                     }
 
@@ -452,6 +461,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         } else {
             moveOptions= terminal("suggestMove,white");
         }
+
         if (moveOptions.isEmpty()) {
             staleOrCheckMate();
         }
