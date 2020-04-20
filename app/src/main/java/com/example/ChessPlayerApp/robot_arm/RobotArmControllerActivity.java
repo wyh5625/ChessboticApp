@@ -23,6 +23,7 @@ import com.example.ChessPlayerApp.BLE.ScanBaseActivity;
 import com.example.ChessPlayerApp.R;
 import com.example.ChessPlayerApp.robot_arm.Chess.ChessFragment;
 import com.example.ChessPlayerApp.robot_arm.Controller.ControllerFragment;
+import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
 
 import java.util.ArrayList;
 
@@ -116,13 +117,16 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
         mFragments = new ArrayList<>();
         Fragment conFragment = ControllerFragment.getInstance();
         Fragment chessFragment = ChessFragment.getInstance();
+        Fragment cameraFragment = CameraFragment.getInstance();
         mFragments.add(conFragment);
         mFragments.add(chessFragment);
+        mFragments.add(cameraFragment);
 
         // tab layout
         TabLayout tabLayout = findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText(R.string.tab_label1));
         tabLayout.addTab(tabLayout.newTab().setText(R.string.tab_label2));
+        tabLayout.addTab(tabLayout.newTab().setText("Camera"));
 
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
