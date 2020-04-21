@@ -1,31 +1,44 @@
 package com.example.ChessPlayerApp.robot_arm;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.design.widget.TabLayout;
 
-
-import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.SurfaceView;
 import android.view.View;
+
 
 import com.example.ChessPlayerApp.BLE.BLEScanHelper;
 import com.example.ChessPlayerApp.BLE.BluetoothLeService;
 import com.example.ChessPlayerApp.BLE.ScanBaseActivity;
 import com.example.ChessPlayerApp.R;
+import com.example.ChessPlayerApp.chessboardcamera.ZoomCameraView;
 import com.example.ChessPlayerApp.robot_arm.Chess.ChessFragment;
 import com.example.ChessPlayerApp.robot_arm.Controller.ControllerFragment;
 import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 
 import java.util.ArrayList;
+
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.ViewPager;
+
+import static com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment.mZoomCameraView;
 
 
 public class RobotArmControllerActivity extends ScanBaseActivity{
@@ -33,6 +46,8 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
 
 
     private final static String TAG = RobotArmControllerActivity.class.getSimpleName();
+    private static final int PERMISSION_REQUEST_CAMERA=9992;
+
 
     public static boolean mConnected = false;
 
@@ -93,6 +108,40 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
 
     ArrayList<Fragment> mFragments;
 
+    private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
+        @Override public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                    //DO YOUR WORK/STUFF HERE
+                    // mOpenCvCameraView.enableView();
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
+
+    private void requestCameraPermission() {
+        // Permission has not been granted and must be requested.
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Provide an additional rationale to the user if the permission was not granted
+            // and the user would benefit from additional context for the use of the permission.
+            // Display a SnackBar with cda button to request the missing permission.
+            ActivityCompat.requestPermissions(RobotArmControllerActivity.this,
+                    new String[]{Manifest.permission.CAMERA},
+                    PERMISSION_REQUEST_CAMERA);
+
+
+        } else {
+            //Snackbar.make(mOpenCvCameraView, R.string.camera_unavailable, Snackbar.LENGTH_SHORT).show();
+            // Request the permission. The result will be received in onRequestPermissionResult().
+
+        }
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +161,8 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
         });
 
          */
+
+        requestCameraPermission();
 
         // save one copy of each fragment
         mFragments = new ArrayList<>();
@@ -151,7 +202,12 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
         // create BLE service for communication
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+
+
     }
+
+
 
     @Override
     public void init() {
@@ -170,6 +226,13 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
     @Override
     protected void onResume() {
         super.onResume();
+        if (!OpenCVLoader.initDebug()) {
+            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0,this, mOpenCVCallBack);
+        } else {
+            Log.d(TAG, "OpenCV library found inside package. Using it!");
+            mOpenCVCallBack.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
     }
 
@@ -177,6 +240,8 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
+        if (mZoomCameraView != null)
+            mZoomCameraView.disableView();
     }
 
     @Override
@@ -185,6 +250,8 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
         unbindService(mServiceConnection);
         mBluetoothLeService.disconnect();
         mBluetoothLeService = null;
+        if (mZoomCameraView != null)
+            mZoomCameraView.disableView();
     }
 
 

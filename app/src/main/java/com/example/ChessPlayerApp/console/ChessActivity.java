@@ -1,12 +1,13 @@
 package com.example.ChessPlayerApp.console;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.example.ChessPlayerApp.R;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class ChessActivity extends AppCompatActivity {
 

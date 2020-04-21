@@ -28,18 +28,19 @@ import java.util.Random;
 
 
 public class TheEngine {
+    public static boolean gameStarted = false;
     static boolean robotArmControl = false;
     static int wKingNeverMove, wKRNeverMove,wQRNeverMove,
             bKingNeverMove,bKRNeverMove,bQRNeverMove;
-    static boolean whiteTurn, stopNow;
+    public static boolean whiteTurn, stopNow;
     static boolean checkStaleMate = false;
     static boolean blackAsAI = true;
     static boolean checkMate = false;
     static int whiteKing, blackKing, plyTurn;
-    static String promoteToW = "Q", getPromoteToB = "q", lastMove = "xxxxxx",
+    public static String promoteToW = "Q", getPromoteToB = "q", lastMove = "xxxxxx",
     stringBoard = "RNBQKBNRPPPPPPPP********************************pppppppprnbqkbnr";
 
-    static char[] theBoard = {'R','N','B','Q','K','B','N','R','P','P','P','P','P','P','P','P','*','*','*','*',
+    public static char[] theBoard = {'R','N','B','Q','K','B','N','R','P','P','P','P','P','P','P','P','*','*','*','*',
             '*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*','*',
             '*','*','*','*','*','p','p','p','p','p','p','p','p','r','n','b','q','k','b','n','r'};
 
@@ -183,6 +184,7 @@ public class TheEngine {
     }
 
     public static boolean newGame() {
+        gameStarted = true;
         // Temporary spot for this king movement status for castle.
         wKingNeverMove=0;wKRNeverMove=0;wQRNeverMove=0;
         bKingNeverMove=0;bKRNeverMove=0;bQRNeverMove=0;

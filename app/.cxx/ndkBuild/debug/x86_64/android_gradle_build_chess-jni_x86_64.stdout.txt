@@ -1,5 +1,0 @@
-[x86_64] Compile++      : chess-jni <= chess-jni.cpp
-[x86_64] Compile++      : chess-jni <= user_interface.cpp
-[x86_64] Compile++      : chess-jni <= game_control.cpp
-[x86_64] Compile++      : chess-jni <= chess.cpp
-[x86_64] SharedLibrary  : libchess-jni.so

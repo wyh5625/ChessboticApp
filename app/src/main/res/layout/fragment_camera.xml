@@ -6,14 +6,69 @@
     android:layout_height="match_parent"
     tools:context=".robot_arm.RobotArmControllerActivity">
 
+    <LinearLayout
+        android:id="@+id/btnGroup1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_1"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="20dp"
+            android:layout_weight="1"
+            android:text="GameMode" />
+
+        <Button
+            android:id="@+id/btn_2"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="20dp"
+            android:layout_weight="1"
+            android:text="MatchMode" />
+
+
+    </LinearLayout>
+
 
     <com.example.ChessPlayerApp.chessboardcamera.ZoomCameraView
         android:id="@+id/ZoomCameraView"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_below="@+id/btnGroup1"
+        android:layout_above="@+id/btnGroup2"
         android:visibility="gone"
         tools:context=".MainActivity" />
 
+    <LinearLayout
+        android:id="@+id/btnGroup2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal">
+
+
+        <Button
+        android:id="@+id/btn_3"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="20dp"
+        android:layout_weight="1"
+        android:text="Calibrate" />
+
+        <Button
+            android:id="@+id/btn_4"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="20dp"
+            android:layout_weight="1"
+            android:text="MakeMove" />
+    </LinearLayout>
+<!--
     <SeekBar
         android:id="@+id/CameraZoomControls"
         android:layout_width="match_parent"
@@ -22,6 +77,7 @@
         android:layout_centerInParent="true"
         android:paddingLeft="10dp"
         android:paddingRight="10dp" />
+    -->
 
 
 </RelativeLayout>

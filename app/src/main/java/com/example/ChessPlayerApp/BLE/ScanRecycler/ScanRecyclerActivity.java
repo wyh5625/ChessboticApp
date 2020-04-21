@@ -1,12 +1,14 @@
 package com.example.ChessPlayerApp.BLE.ScanRecycler;
 
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
 
 import com.example.ChessPlayerApp.BLE.BLEScanHelper;
 import com.example.ChessPlayerApp.BLE.ScanBaseActivity;
 import com.example.ChessPlayerApp.R;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class ScanRecyclerActivity extends ScanBaseActivity {
 

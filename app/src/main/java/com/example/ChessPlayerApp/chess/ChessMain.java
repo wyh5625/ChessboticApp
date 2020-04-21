@@ -1,9 +1,11 @@
 package com.example.ChessPlayerApp.chess;
 
-import android.support.v7.app.AppCompatActivity;
+
 import android.os.Bundle;
 
 import com.example.ChessPlayerApp.R;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class ChessMain extends AppCompatActivity {
 

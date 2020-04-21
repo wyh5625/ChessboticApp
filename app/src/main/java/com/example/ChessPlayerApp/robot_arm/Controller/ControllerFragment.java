@@ -15,8 +15,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+
 
 import com.example.ChessPlayerApp.R;
 import com.example.ChessPlayerApp.robot_arm.RobotArmControllerActivity;
@@ -32,6 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 public class ControllerFragment extends Fragment implements View.OnClickListener{
 

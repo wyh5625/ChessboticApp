@@ -1,5 +1,1 @@
-[x86] Compile++      : chess-jni <= chess-jni.cpp
-[x86] Compile++      : chess-jni <= user_interface.cpp
-[x86] Compile++      : chess-jni <= game_control.cpp
-[x86] Compile++      : chess-jni <= chess.cpp
-[x86] SharedLibrary  : libchess-jni.so
+make: Nothing to be done for `chess-jni'.

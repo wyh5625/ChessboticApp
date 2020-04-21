@@ -1,12 +1,12 @@
 package com.example.ChessPlayerApp.robot_arm;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
-
 import com.example.ChessPlayerApp.robot_arm.Chess.ChessFragment;
 import com.example.ChessPlayerApp.robot_arm.Controller.ControllerFragment;
 import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
 
 public class PagerAdapter extends FragmentStatePagerAdapter {
     int mNumOfTabs;

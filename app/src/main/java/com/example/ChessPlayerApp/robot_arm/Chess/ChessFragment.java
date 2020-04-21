@@ -11,8 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ImageView;
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+
 
 import static com.example.ChessPlayerApp.robot_arm.Chess.TheEngine.getPromoteToB;
 import static com.example.ChessPlayerApp.robot_arm.Chess.TheEngine.promoteToW;
@@ -23,8 +22,12 @@ import static com.example.ChessPlayerApp.robot_arm.Chess.TheUserInterface.drawBo
 
 
 import com.example.ChessPlayerApp.R;
+import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
 
 import java.util.Arrays;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 
 public class ChessFragment extends Fragment implements View.OnClickListener{
@@ -51,14 +54,15 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
     private Button resetButton;
 
     static int engineStrength = 3;
-    boolean wTurn, firstClick;
+    public static boolean wTurn;
+    boolean firstClick;
     String tryMove;
 
     static String moveOptions;
     static int firstNum;
 
     static boolean pBlack = true;
-    static boolean pPass = false;
+    public static boolean pPass = false;
 
     static TextView mConsole;
     static Button viewBoardBtn;
@@ -129,6 +133,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
     public void initChess(){
         firstClick = false;
 
+        CameraFragment.lastPcl = CameraFragment.PCL;
+
         moveOptions = "Move Options";
 
         //Start a new game.
@@ -155,6 +161,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
         if (moveOptions.isEmpty()) {
             staleOrCheckMate();
+            TheEngine.gameStarted = false;
         }
     }
 
@@ -167,7 +174,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
     }
 
     // Our new class to tell the computer to think about a movePiece....
-    public class thinkMove extends AsyncTask<String, Void, String> {
+    public static class thinkMove extends AsyncTask<String, Void, String> {
 
         // Do this in the background.
         @Override
@@ -191,7 +198,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         }
     }// End asyncronous task of finding a movePiece....
 
-    public void getNextMove() {
+    public static void getNextMove() {
         // Call the class to make a movePiece...
         thinkMove task = new thinkMove();
         String result = null;
@@ -303,6 +310,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
             firstClick = false;
             String myMove = tryMove + played + String.valueOf(theBoard[number]);
 
+
             moveOptions= terminal("availMoves,"+String.valueOf(wTurn));
 
             String[] separated = moveOptions.split(",");
@@ -311,24 +319,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
             if (Arrays.asList(separated).contains(myMove)) {
                 validMove = true;
                 String query = terminal("myMove,"+myMove);
-                drawBoardPieces();
-                wTurn = !wTurn;
 
-                if (!pPass) {
-                    // Since we moved, if it is not pass and play, make the computer movePiece.
-                    moveOptions="";
-                    if (!wTurn){
-                        moveOptions= terminal("suggestMove,black");
-                    } else {
-                        moveOptions= terminal("suggestMove,white");
-                    }
-                    if (moveOptions.isEmpty()) {
-                        staleOrCheckMate();
-                    } else {
-                        getNextMove();
-                        wTurn = !wTurn;
-                    }
-                }
+                AIWork();
 
             } else {
 
@@ -390,24 +382,9 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
                 if (Arrays.asList(separated).contains(myMove)) {
                     validMove = true;
                     String query = terminal("myMove," + myMove);
-                    drawBoardPieces();
-                    wTurn = !wTurn;
 
-                    if (!pPass) {
-                        // Since we moved, if it is not pass and play, make the computer movePiece.
-                        moveOptions="";
-                        if (!wTurn){
-                            moveOptions= terminal("suggestMove,black");
-                        } else {
-                            moveOptions= terminal("suggestMove,white");
-                        }
-                        if (moveOptions.isEmpty()) {
-                            staleOrCheckMate();
-                        } else {
-                            getNextMove();
-                            wTurn = !wTurn;
-                        }
-                    }
+                    AIWork();
+
 
                 }
             }
@@ -464,6 +441,29 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
         if (moveOptions.isEmpty()) {
             staleOrCheckMate();
+            TheEngine.gameStarted = false;
+        }
+    }
+
+    public void AIWork(){
+        drawBoardPieces();
+        wTurn = !wTurn;
+
+        if (!pPass) {
+            // Since we moved, if it is not pass and play, make the computer movePiece.
+            moveOptions="";
+            if (!wTurn){
+                moveOptions= terminal("suggestMove,black");
+            } else {
+                moveOptions= terminal("suggestMove,white");
+            }
+            if (moveOptions.isEmpty()) {
+                staleOrCheckMate();
+                TheEngine.gameStarted = false;
+            } else {
+                getNextMove();
+                wTurn = !wTurn;
+            }
         }
     }
 

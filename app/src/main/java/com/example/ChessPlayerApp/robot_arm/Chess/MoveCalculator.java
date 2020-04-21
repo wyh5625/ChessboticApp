@@ -1,11 +1,14 @@
 package com.example.ChessPlayerApp.robot_arm.Chess;
 
+import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
+
 import java.util.ArrayList;
 import static com.example.ChessPlayerApp.robot_arm.Chess.TheEngine.theBoard;
 
 public class MoveCalculator {
     // can use theBoard to calculate the first matrix
 
+    /*
     // from/to are 2-D array showing occupancy of piece on board
     // 1:white 0:empty -2:black
     public static int[][] calculate(int[][] from, int[][] to){
@@ -26,8 +29,11 @@ public class MoveCalculator {
         return moveMat;
     }
 
-    public static String getMove(int[][] to){
+     */
+
+    public static String getMove(char[][] from, char[][] to){
         /* Calculate the previous matrix from theBoard */
+        /*
         int[][] from = new int[8][8];
         for (int i = 0; i < 64; i ++){
             if (theBoard[i] > 'A' && theBoard[i] < 'Z')
@@ -38,20 +44,21 @@ public class MoveCalculator {
                 from[i/8][i%8] = -2;
         }
 
+         */
+
         // only consider legal move
         // special move:
         // k-0-0r : 4 non-zero
         // en passant capture : 3 non-zero
         // normal move & normal eat : 2 non-zero
         String move;
-        int[][] moveMat = calculate(from, to);
 
         // aim to find first click and second click which combine to form a movement
         // 1. find types of movement
         ArrayList<int[]> points = new ArrayList<>();
         for (int i = 0; i < 8; i ++) {
             for (int j = 0; j < 8; j++) {
-                if (moveMat[i][j] != 0)
+                if (from[i][j] != to[i][j])
                     points.add(new int[]{i, j});
             }
         }
@@ -59,10 +66,12 @@ public class MoveCalculator {
         int[] firstCli = new int[2];
         int[] secondCli = new int[2];
 
+        int fstPos, secPos;
+
         switch (points.size()){
             case 2:
                 for (int[] pos : points){
-                    if (to[pos[0]][pos[1]] == 0){
+                    if (to[pos[0]][pos[1]] == CameraFragment.E){
                         // record first click
                         firstCli = pos;
                         break;
@@ -73,28 +82,39 @@ public class MoveCalculator {
 
                 char piece = theBoard[firstCli[0] * 8 + firstCli[1]];
 
-                int fstPos, secPos;
+
                 fstPos = firstCli[0] * 8 + firstCli[1];
                 secPos = secondCli[0] * 8 + secondCli[1];
 
-                // pown promotion
-                if(piece == 'P' && secondCli[0] == 7){
-                    if (secondCli[1] > firstCli[1])
-                        return "Pr-" +  secPos;
-                    else if (secondCli[1] < firstCli[1])
-                        return "Pl-" +  secPos;
-                    else
-                        return "Pu-" +  secPos;
+                if (from[firstCli[0]][firstCli[1]] == CameraFragment.W){
+                    // pown promotion
+                    if(piece == 'P' && secondCli[0] == 7){
+                        if (secondCli[1] > firstCli[1])
+                            return "Pr" + TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                        else if (secondCli[1] < firstCli[1])
+                            return "Pl" +  TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                        else
+                            return "Pu" +  TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                    }
+                }else {
+                    // must be black move
+                    // pown promotion
+                    if (piece == 'p' && secondCli[0] == 0) {
+                        if (secondCli[1] > firstCli[1])
+                            return "pr" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                        else if (secondCli[1] < firstCli[1])
+                            return "pl" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                        else
+                            return "pu" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                    }
                 }
-
-
-                move = "" + piece + (fstPos < 10? "0" + fstPos:fstPos) + (secPos < 10? "0" + secPos: secPos);
+                move = "" + piece + (fstPos < 10 ? "0" + fstPos : fstPos) + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
                 return move;
 
             case 3:
                 // only consider en passant capture on human's side
                 for (int[] pos : points){
-                    if (from[pos[0]][pos[1]] == 0){
+                    if (from[pos[0]][pos[1]] == CameraFragment.E){
                         secondCli = pos;
                         break;
                     }
@@ -106,11 +126,24 @@ public class MoveCalculator {
                         break;
                     }
                 }
-                if (secondCli[1] > firstCli[1]){
-                    return "PER" + (secondCli[0]*8 + secondCli[1]);
+
+                fstPos = firstCli[0] * 8 + firstCli[1];
+                secPos = secondCli[0] * 8 + secondCli[1];
+
+                if(from[firstCli[0]][firstCli[1]] == CameraFragment.W){
+                    if (secondCli[1] > firstCli[1]){
+                        return "PER" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] + 1];
+                    }else{
+                        return "PEL" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] - 1];
+                    }
                 }else{
-                    return "PEL" + (secondCli[0]*8 + secondCli[1]);
+                    if (secondCli[1] > firstCli[1]){
+                        return "per" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] + 1];
+                    }else{
+                        return "pel" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] - 1];
+                    }
                 }
+
 
             case 4:
                 // white side
