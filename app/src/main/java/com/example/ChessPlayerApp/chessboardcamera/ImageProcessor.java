@@ -1,6 +1,7 @@
 package com.example.ChessPlayerApp.chessboardcamera;
 
 import android.graphics.Bitmap;
+import android.graphics.Camera;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -50,16 +51,18 @@ public class ImageProcessor {
     public static final String KEY_PREF_HOUGHLINE_MINLINELENGTH = "houghline_minlinelength";
     public static final String KEY_PREF_HOUGHLINE_MAXLINEGAP = "houghline_maxlinegap";
     public static final String KEY_PREF_BINARY_THRES = "binary_thres";
+    public static final String KEY_PREF_CHESSBOARD_DETECT_THRES = "chessboard_thres";
     private static final int PERMISSION_REQUEST_CAMERA=9992;
 
 
     // value
-    public static int cannyEdgeThres1 = 40;
-    public static int cannyEdgeThres2 = 100;
-    public static int houghLinesThres = 200;
-    public static int houghLinesMinLineLength = 300;
+    public static int cannyEdgeThres1 = 20;
+    public static int cannyEdgeThres2 = 60;
+    public static int houghLinesThres = 100;
+    public static int houghLinesMinLineLength = 100;
     public static int houghLinesMaxLineGap = 500;
     public static int binaryThres = 120;
+    public static int chessboardDetectThres = 7;
 
 
     private Bitmap currentBitmap;
@@ -78,7 +81,8 @@ public class ImageProcessor {
     // AOI threshold = min number of canny edge
     public static final int AOI_canny_thres = 120;
 
-    public static final int occpancy_thres = 80;
+    public static final int occpancy_thres = 200;
+    public static final int color_thres = 200;
 
     static Point[][] detectedChessboardModel;
 
@@ -101,75 +105,90 @@ public class ImageProcessor {
         return re;
     }
 
-    public static Mat blurAndAT(Mat src){
+    // src: grayscale mat
+    public static Mat cvtBinary(Mat grayMat){
         // its modified version of canny, it only detect canny edge of darker pixel, so that it can remove unnecessary detail. You can convert back to original one by removing code of binary mat
-        Mat grayMat = new Mat();
-        Mat cannyEdges = new Mat();
-        Mat binaryMat = new Mat();
 
-        //Converting the image to grayscale
-        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
+        Mat blurMat = new Mat();
+        Imgproc.threshold(grayMat, grayMat, binaryThres, 255, Imgproc.THRESH_BINARY);
 
+
+
+        return grayMat;
+    }
+
+    // src: grayscale mat
+    public static Mat blurAndAT(Mat grayMat){
+        // its modified version of canny, it only detect canny edge of darker pixel, so that it can remove unnecessary detail. You can convert back to original one by removing code of binary mat
+
+        Mat blurMat = new Mat();
+
+        //Imgproc.threshold(grayMat, blurMat, binaryThres, 255, Imgproc.THRESH_BINARY);
         //Log.d("GrayScale", "get pixel value: " + printArray(grayMat.get(500,500)));
 
-        Imgproc.medianBlur(grayMat, grayMat, 23);
+        // ksize must be odd, otherwise it will halt
+        Imgproc.medianBlur(grayMat, grayMat, 11);
+        //Imgproc.threshold(grayMat, blurMat, binaryThres, 255, Imgproc.THRESH_BINARY);
+        //Imgproc.adaptiveThreshold(grayMat, blurMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 3, 0);
 
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(grayMat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 9, 0);
-
-        Imgproc.medianBlur(binaryMat, binaryMat, 5);
+        //Imgproc.medianBlur(grayMat, grayMat, 9);
 
 
-        //Converting Mat back to Bitmap
-        //Utils.matToBitmap(binaryMat, currentBitmap);
-        //loadImageToImageView();
-        return binaryMat;
+        return grayMat;
     }
 
 
-    public static Mat Canny(Mat src)
+    public static Mat Canny(Mat grayMat)
     {
         // its modified version of canny, it only detect canny edge of darker pixel, so that it can remove unnecessary detail. You can convert back to original one by removing code of binary mat
-        Mat grayMat = new Mat();
         Mat cannyEdges = new Mat();
-        Mat binaryMat = new Mat();
+        Mat blurMat;
 
-        //Converting the image to grayscale
-        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
 
-        Imgproc.medianBlur(grayMat, grayMat, 23);
-
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(grayMat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 9, 0);
-
-        Imgproc.medianBlur(binaryMat, binaryMat, 5);
+        blurMat = cvtBinary(grayMat);
 
         //Log.d("THRES", cannyEdgeThres1 + " " + cannyEdgeThres2);
-        Imgproc.Canny(binaryMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
+        Imgproc.Canny(blurMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
 
-       //Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
+        //Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
         //Imgproc.dilate(binaryMat, binaryMat, kernelDilate);
 
         //Mat kernelErode = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
         //Imgproc.erode(binaryMat, binaryMat, kernelErode);
 
+        return cannyEdges;
+
+
+    }
+
+    // for detect piece edges
+    public static Mat Canny2(Mat grayMat)
+    {
+        // its modified version of canny, it only detect canny edge of darker pixel, so that it can remove unnecessary detail. You can convert back to original one by removing code of binary mat
+        Mat cannyEdges = new Mat();
+        Mat blurMat;
+
+
+        blurMat = blurAndAT(grayMat);
+
+        //Log.d("THRES", cannyEdgeThres1 + " " + cannyEdgeThres2);
+        Imgproc.Canny(blurMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
+
+        //Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
+        //Imgproc.dilate(binaryMat, binaryMat, kernelDilate);
+
+        //Mat kernelErode = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+        //Imgproc.erode(binaryMat, binaryMat, kernelErode);
 
         return cannyEdges;
-        //Converting Mat back to Bitmap
-        //Utils.matToBitmap(cannyEdges, currentBitmap);
-        //loadImageToImageView();
+
+
     }
 
 
-    public static Mat HoughLines(Mat src) throws IOException {
-        Mat grayMat = new Mat();
-        Mat binaryMat = new Mat();
+    // get Hough Lines
+    public static Mat HoughLines(Mat src){
         Mat cannyEdges = new Mat();
-        Mat hierarchy = new Mat();
         List<MatOfPoint> contourList = new
                 ArrayList<MatOfPoint>();
 
@@ -178,146 +197,32 @@ public class ImageProcessor {
         //Converting the image to grayscale
 
         //Converting the image to grayscale
-        Imgproc.cvtColor(src,grayMat, Imgproc.COLOR_BGR2GRAY);
+        Mat masked_mat = Contours(src);
 
-
-
-        Imgproc.Canny(grayMat, cannyEdges,cannyEdgeThres1, cannyEdgeThres2);
-
-        // dilate the binary mat
-        Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9,9));
-        Imgproc.dilate(cannyEdges, cannyEdges, kernelDilate);
-
-        //finding contours
-        Imgproc.findContours(cannyEdges,contourList
-                ,hierarchy, Imgproc.RETR_CCOMP,
-                Imgproc.CHAIN_APPROX_SIMPLE);
-
-        if (contourList.size() == 0){
-            return null;
-        }
-
-        int index = 0;
-        double maxim = Imgproc.contourArea(contourList.get(0));
-        for (int contourIdx = 1; contourIdx < contourList.size();
-             contourIdx++) {
-            double temp;
-            temp= Imgproc.contourArea(contourList.get(contourIdx));
-            if(maxim<temp)
-            {
-                maxim=temp;
-                index=contourIdx;
-            }
-        }
-
-        Mat contour_mask = Mat.zeros(cannyEdges.rows()
-                ,cannyEdges.cols(), CvType.CV_8UC1);
-        Imgproc.drawContours(contour_mask, contourList, index, new Scalar(255),
-                -1);
-
-/*
-        //Drawing contours on a new image
-        Mat contours = new Mat();
-        contours.create(cannyEdges.rows()
-                ,cannyEdges.cols(),CvType.CV_8UC3);
-        Random r = new Random();
-        for(int i = 0; i < contourList.size(); i++)
-        {
-            Imgproc.drawContours(contours
-                    ,contourList,i,new Scalar(r.nextInt(255)
-                            ,r.nextInt(255),r.nextInt(255)), -1);
-        }
-        */
-        Mat masked_mat = new Mat();
-        //Log.d("Size", "Size 1: " + contour_mask.size() + " Size 2: " + originalMat.size());
-        Core.bitwise_and(contour_mask, grayMat, masked_mat);
-
-        Imgproc.medianBlur(masked_mat, masked_mat, 23);
-
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(masked_mat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 9, 0);
-
-        Imgproc.medianBlur(binaryMat, binaryMat, 5);
-
-        Imgproc.Canny(binaryMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
-
-
+        cannyEdges = Canny(masked_mat);
 
         Imgproc.HoughLinesP(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, houghLinesMinLineLength, houghLinesMaxLineGap);
 
-        //Imgproc.HoughLines(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, 0, 0, houghLinesMinLineLength, houghLinesMaxLineGap);
 
-        Mat houghLines = src.clone();
-        //houghLines.create(cannyEdges.rows(),
-        //        cannyEdges.cols(), CvType.CV_8UC1);
+        return lines;
 
-        List<Line> crossLine = new ArrayList<Line>();
-
-        //Drawing lines on the image
-        Log.d("LENGTH", " " + lines.rows());
-
-        // at least 2 lines for cluster
-        if (lines.rows() < 2)
-            return null;
-
-
-        for (int i = 0; i < lines.rows(); i++) {
-            double[] points = lines.get(i,0);
-            Line l = new Line(points, src.width(), src.height());
-            crossLine.add(l);
-
-            Log.d("Line", "theta = " + l.getTheta() + " | Rtho = " + l.getRtho());
-        }
-
-        Map<Centroid, List<Line>> clusters = KMeans.fit(crossLine, 2, new ThetaDistance(), 100);
-
-        //Random random = new Random();
-
-        // Write line data to file for python analyzing
-        //OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput("line_data.txt", Context.MODE_PRIVATE));
-        // i indicates different clusters
-        Scalar colors[] = new Scalar[]{new Scalar(255,0,0), new Scalar(0, 255, 0)};
-        int i = 0;
-        for(Centroid centroid: clusters.keySet()){
-            //Scalar scalar = new Scalar(random.nextDouble()*255, random.nextDouble()*255, random.nextDouble()*255);
-            for(Line line: clusters.get(centroid)){
-                Imgproc.line(houghLines, line.getP1(), line.getP2(), colors[i], 1);
-
-                //outputStreamWriter.write(i + " " + line.getTheta() + " " + line.getRtho() + "\n");
-            }
-            i++;
-        }
-
-        //outputStreamWriter.close();
-
-        return houghLines;
-        //Converting Mat back to Bitmap
-        //Utils.matToBitmap(houghLines, currentBitmap);
-        //loadImageToImageView();
     }
 
 
     // find maximum contour
     public static Mat Contours(Mat src)
     {
-        Mat grayMat = new Mat();
-        Mat binaryMat = new Mat();
         Mat cannyEdges = new Mat();
         Mat hierarchy = new Mat();
         List<MatOfPoint> contourList = new
                 ArrayList<MatOfPoint>();
 
-        Mat lines = new Mat();
         //A list to store all the contours
         //Converting the image to grayscale
 
         //Converting the image to grayscale
-        Imgproc.cvtColor(src,grayMat, Imgproc.COLOR_BGR2GRAY);
 
-
-
-        Imgproc.Canny(grayMat, cannyEdges,cannyEdgeThres1, cannyEdgeThres2);
+        Imgproc.Canny(src, cannyEdges,cannyEdgeThres1, cannyEdgeThres2);
 
         // dilate the binary mat
         Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(9,9));
@@ -325,19 +230,19 @@ public class ImageProcessor {
 
         //finding contours
         Imgproc.findContours(cannyEdges,contourList
-                ,hierarchy, Imgproc.RETR_CCOMP,
+                ,hierarchy,Imgproc.RETR_CCOMP,
                 Imgproc.CHAIN_APPROX_SIMPLE);
 
+        if(contourList.isEmpty())
+            return src;
 
-        if (contourList.isEmpty()){
-            return null;
-        }
+
         int index = 0;
         double maxim = Imgproc.contourArea(contourList.get(0));
         for (int contourIdx = 1; contourIdx < contourList.size();
              contourIdx++) {
             double temp;
-            temp= Imgproc.contourArea(contourList.get(contourIdx));
+            temp=Imgproc.contourArea(contourList.get(contourIdx));
             if(maxim<temp)
             {
                 maxim=temp;
@@ -365,7 +270,7 @@ public class ImageProcessor {
         */
         Mat masked_mat = new Mat();
         //Log.d("Size", "Size 1: " + contour_mask.size() + " Size 2: " + originalMat.size());
-        Core.bitwise_and(contour_mask, grayMat, masked_mat);
+        Core.bitwise_and(contour_mask, src, masked_mat);
 
         return masked_mat;
         //Converting Mat back to Bitmap
@@ -411,27 +316,6 @@ public class ImageProcessor {
                 ,hierarchy, Imgproc.RETR_CCOMP,
                 Imgproc.CHAIN_APPROX_SIMPLE);
 
-        /*
-        int index = 0;
-        double maxim = Imgproc.contourArea(contourList.get(0));
-        for (int contourIdx = 1; contourIdx < contourList.size();
-             contourIdx++) {
-            double temp;
-            temp=Imgproc.contourArea(contourList.get(contourIdx));
-            if(maxim<temp)
-            {
-                maxim=temp;
-                index=contourIdx;
-            }
-        }
-
-        Mat contour_mask = Mat.zeros(cannyEdges.rows()
-                ,cannyEdges.cols(), CvType.CV_8UC1);
-        Imgproc.drawContours(contour_mask, contourList, index, new Scalar(255),
-                -1);
-
-         */
-
 
         //Drawing contours on a new image
         Mat contours = new Mat();
@@ -445,133 +329,91 @@ public class ImageProcessor {
                             ,r.nextInt(255),r.nextInt(255)), -1);
         }
 
-        /*
-        Mat masked_mat = new Mat();
-        //Log.d("Size", "Size 1: " + contour_mask.size() + " Size 2: " + originalMat.size());
-        Core.bitwise_and(contour_mask, grayMat, masked_mat);
-
-         */
-
-
-
         return contours;
-        //Converting Mat back to Bitmap
-        //Utils.matToBitmap(contours, currentBitmap);
-        //loadImageToImageView();
+
     }
 
 
-    public static Mat ClusterLinesAndIntersection(Mat src){
-        /**mask part**/
-        Mat grayMat = new Mat();
-        Mat binaryMat = new Mat();
-        Mat cannyEdges = new Mat();
-        Mat hierarchy = new Mat();
-        List<MatOfPoint> contourList = new
-                ArrayList<MatOfPoint>();
-        //A list to store all the contours
-        //Converting the image to grayscale
 
-        /* Canny Edge */
-        //Converting the image to grayscale
-        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
+    public static Match MatchChessboard(List<List<Point>> intersectPoints){
+        Point[][] matchPoints = null;
 
+        /**  match chessboard part **/
+        if(intersectPoints.size() > 8 && intersectPoints.get(0).size() > 8) {
+            Point[][] chessboardReferenceModel = new Point[9][9];
+            // initialize the chessboard
+            for (int i = 0; i < 9; i++)
+                for (int j = 0; j < 9; j++) {
+                    chessboardReferenceModel[i][j] = new Point(blockSize * j, blockSize * i);
+                }
+            // chessboard kernel mat
+            List<List<Point>> kernelMat = new ArrayList<>();
+            double minDistance = Double.MAX_VALUE;
 
-        Imgproc.Canny(grayMat, cannyEdges,cannyEdgeThres1, cannyEdgeThres2);
+            // top left corner
+            int idx_x = 0;
+            int idx_y = 0;
+            // outer Dot Mat loop, locate top left corner of the mat, size of chessboard is 9x9
+            // boundary is 8 not 9
+            for (int row = 0; row < intersectPoints.size() - 8; row++)
+                for (int col = 0; col < intersectPoints.get(row).size() - 8; col++) {
+                    // inner Chessboard kernel loop
 
-        // dilate the binary mat
-        Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
-        Imgproc.dilate(cannyEdges, cannyEdges, kernelDilate);
+                    // crop 9x9 points array
+                    Point[][] chessboardModel = new Point[9][9];
+                    for (int i = 0; i < 9; i++) {
+                        for (int j = 0; j < 9; j++) {
+                            chessboardModel[i][j] = intersectPoints.get(row + i).get(col + j);
+                        }
+                    }
+                    // calculate distance from this model to chessboard reference model
+                    double bD = distanceToChessboardModel(chessboardModel, chessboardReferenceModel);
+                    //Log.d("Distance", "Distance to model reference: " + bD);
 
-        /* Contour */
-        //finding contours
-        Imgproc.findContours(cannyEdges,contourList
-                ,hierarchy, Imgproc.RETR_CCOMP,
-                Imgproc.CHAIN_APPROX_SIMPLE);
+                    if (bD < minDistance && bD < chessboardDetectThres) {
+                        chessboardMatchTransform = recentAppliedTransform;
+                        detectedChessboardModel = chessboardModel;
+                        matchPoints = detectedChessboardModel;
+                        minDistance = bD;
+                        idx_x = row;
+                        idx_y = col;
+                    }
+                }
 
-        if (contourList.size() == 0)
-            return src;
+            Log.d("MinChessoBardDistance", "Sum of chessboard difference: " + minDistance);
 
-        // find largest contour
-        int index = 0;
-        double maxim = Imgproc.contourArea(contourList.get(0));
-        for (int contourIdx = 1; contourIdx < contourList.size();
-             contourIdx++) {
-            double temp;
-            temp= Imgproc.contourArea(contourList.get(contourIdx));
-            if(maxim<temp)
-            {
-                maxim=temp;
-                index=contourIdx;
-            }
         }
 
-        // get mask with in shape of largest contour
-        Mat contour_mask = Mat.zeros(cannyEdges.rows()
-                ,cannyEdges.cols(), CvType.CV_8UC1);
-        Imgproc.drawContours(contour_mask, contourList, index, new Scalar(255),
-                -1);
-
-        Log.d("Contour", "size of contour is: " + contourList.get(index).size());
 
         /*
-        // find outer corners of chessboard
-        double epsilon = 0.1*Imgproc.arcLength(new MatOfPoint2f(contourList.get(index).toArray()),true);
-        MatOfPoint2f approx = new MatOfPoint2f();
-        Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(index).toArray()),approx,epsilon,true);
-        Log.d("Contour corner", "Corner: " + approx.rows());
+        //Converting Mat back to Bitmap
+        Utils.matToBitmap(houghLines, currentBitmap);
+        loadImageToImageView();
 
          */
+        return new Match(matchPoints, chessboardMatchTransform);
 
-        /*
-        //Drawing all contours on a new image
-        Mat contours = new Mat();
-        contours.create(cannyEdges.rows()
-                ,cannyEdges.cols(),CvType.CV_8UC3);
-        Random r = new Random();
-        for(int i = 0; i < contourList.size(); i++)
-        {
-            Imgproc.drawContours(contours
-                    ,contourList,i,new Scalar(r.nextInt(255)
-                            ,r.nextInt(255),r.nextInt(255)), -1);
-        }
-        */
+    }
 
-        // apply mask on grayMat
-        Mat masked_mat = new Mat();
-        //Log.d("Size", "Size 1: " + contour_mask.size() + " Size 2: " + originalMat.size());
-        Core.bitwise_and(contour_mask, grayMat, masked_mat);
+    public static List<List<Point>> ClusterLinesAndIntersection(Mat src){
+        List<List<Point>> intersectPoints = new ArrayList<>();
 
+        /**mask part**/
+        Mat masked_mat;
+        masked_mat = Contours(src);
 
         /**Hough Line part**/
-
         Mat lines = new Mat();
-        /* find hough line */
-
-        Imgproc.medianBlur(masked_mat, masked_mat, 23);
-
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(masked_mat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 9, 0);
-
-        Imgproc.medianBlur(binaryMat, binaryMat, 5);
-
-        Imgproc.Canny(binaryMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
-
-        Imgproc.HoughLinesP(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, houghLinesMinLineLength, houghLinesMaxLineGap);
-
-        //Imgproc.HoughLines(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, 0, 0, houghLinesMinLineLength, houghLinesMaxLineGap);
-
+        lines = HoughLines(masked_mat);
         Mat houghLines = src.clone();
 
 
+        /**Cluster part**/
         if (lines.rows() < 2)
-            return src;
+            return intersectPoints;
 
         List<Line> crossLine = new ArrayList<Line>();
-
         Log.d("LENGTH", " " + lines.rows());
-
         // store line in list
         for (int i = 0; i < lines.rows(); i++) {
             double[] points = lines.get(i,0);
@@ -580,16 +422,11 @@ public class ImageProcessor {
         }
 
         /* cluster lines in two groups -- horizontal group and vertical group */
-
-
         Map<Centroid, List<Line>> clusters = KMeans.fit(crossLine, 2, new HoughDistance(), 500);
-
-        //Map<Centroid, List<Line>> clusters_a = KMeans.fit2((List<Line>)clusters.values().toArray()[0], 2, new HoughDistance(), 500);
 
         /*  cluster lines in each group by crossPointCluster -- expected 9,9  */
         Centroid verticalCent;
         Centroid horizontalCent;
-
         Centroid firstCent = (Centroid)clusters.keySet().toArray()[0];
         Centroid secondCent = (Centroid)clusters.keySet().toArray()[1];
         Log.d("Orientation", "first cent: " + Math.abs(firstCent.line.getTheta()));
@@ -601,12 +438,9 @@ public class ImageProcessor {
             horizontalCent = secondCent;
             verticalCent = firstCent;
         }
-
         List<LineWithPoint> lineWithPoints_v = new ArrayList<>();
         List<LineWithPoint> lineWithPoints_h = new ArrayList<>();
-
         // calculate intersection points between all vercital line and a horizoncel line
-
         // get one line of another group
         Line hzLine = clusters.get(horizontalCent).get(0);
         Line vtLine = clusters.get(verticalCent).get(0);
@@ -622,28 +456,20 @@ public class ImageProcessor {
         }
 
         // cluster cross points by coordinates
-        Map<Centroid, List<LineWithPoint>> verticalIntersectionClusters = KMeans.fit2_point(lineWithPoints_v, 60, new PointDistance(), 500);
-        Map<Centroid, List<LineWithPoint>> horizontalIntersectionClusters = KMeans.fit2_point(lineWithPoints_h, 60, new PointDistance(), 500);
+        Map<Centroid, List<LineWithPoint>> verticalIntersectionClusters = KMeans.fit2_point(lineWithPoints_v, 20, new PointDistance(), 500);
+        Map<Centroid, List<LineWithPoint>> horizontalIntersectionClusters = KMeans.fit2_point(lineWithPoints_h, 20, new PointDistance(), 500);
 
         // sort verticalIntersectionClusters's keys in order according to their point
         Map<Centroid, List<LineWithPoint>> sortedVerticalClusters = new TreeMap<>(new CentroidComparator());
         Map<Centroid, List<LineWithPoint>> sortedHorizontalClusters = new TreeMap<>(new CentroidComparator());
 
-        /*
-        for (Centroid ce : verticalIntersectionClusters.keySet()){
-            if (ce == null){
-                Log.d("CentroidNl", "Is Centroid Null: " + ce);
-                Log.d("CentroidNl", "Size of values: " + verticalIntersectionClusters.get(ce).size());
-            }
-        }
-
-         */
         sortedVerticalClusters.putAll(verticalIntersectionClusters);
         sortedHorizontalClusters.putAll(horizontalIntersectionClusters);
 
         // convert to standard cluster type for looping
         ArrayList<List<Line>> sortedVerticalClusters_SD = new ArrayList<>();
         ArrayList<List<Line>> sortedHorizontalClusters_SD = new ArrayList<>();
+
 
         for(Map.Entry<Centroid, List<LineWithPoint>> entry: sortedVerticalClusters.entrySet()){
             // Convert List<LineWithPoint> to List<Line>
@@ -670,9 +496,6 @@ public class ImageProcessor {
 
 
         Random random = new Random();
-
-        // Write line data to file for python analyzing
-        // i indicates different clusters
 
         int colors[] = new int[]{
                 Color.BLUE,
@@ -725,9 +548,7 @@ public class ImageProcessor {
         }*/
 
 
-
         /*  calculate intersection points between two refined groups */
-        List<List<Point>> intersectPoints = new ArrayList<>();
 
         for(Line line_a: horizontalCrossLine){
             List<Point> rowPoints = new ArrayList<>();
@@ -737,373 +558,22 @@ public class ImageProcessor {
             intersectPoints.add(rowPoints);
         }
 
-
+        /*
         for(List<Point> row : intersectPoints){
             for(Point p : row)
                 Imgproc.circle(houghLines, p,
                         5, new Scalar(0,255,0, 255), 1);
             //outputStreamWriter.write(i + " " + p.x + " " + p.y + "\n");
         }
+        */
         /*
         //Converting Mat back to Bitmap
         Utils.matToBitmap(houghLines, currentBitmap);
         loadImageToImageView();
 
          */
-        return houghLines;
+        return intersectPoints;
 
-
-    }
-
-
-
-    public static Mat MatchChessboard(Mat src){
-
-        /**mask part**/
-        Mat grayMat = new Mat();
-        Mat binaryMat = new Mat();
-        Mat cannyEdges = new Mat();
-        Mat hierarchy = new Mat();
-        List<MatOfPoint> contourList = new
-                ArrayList<MatOfPoint>();
-        //A list to store all the contours
-        //Converting the image to grayscale
-
-        /* Canny Edge */
-        //Converting the image to grayscale
-        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-
-        Imgproc.Canny(grayMat, cannyEdges,cannyEdgeThres1, cannyEdgeThres2);
-
-        // dilate the binary mat
-        Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
-        Imgproc.dilate(cannyEdges, cannyEdges, kernelDilate);
-
-        /* Contour */
-        //finding contours
-        Imgproc.findContours(cannyEdges,contourList
-                ,hierarchy, Imgproc.RETR_CCOMP,
-                Imgproc.CHAIN_APPROX_SIMPLE);
-
-        if(contourList.size() == 0)
-            return null;
-
-
-        // find largest contour
-        int index = 0;
-        double maxim = Imgproc.contourArea(contourList.get(0));
-        for (int contourIdx = 1; contourIdx < contourList.size();
-             contourIdx++) {
-            double temp;
-            temp= Imgproc.contourArea(contourList.get(contourIdx));
-            if(maxim<temp)
-            {
-                maxim=temp;
-                index=contourIdx;
-            }
-        }
-
-        // get mask with in shape of largest contour
-        Mat contour_mask = Mat.zeros(cannyEdges.rows()
-                ,cannyEdges.cols(), CvType.CV_8UC1);
-        Imgproc.drawContours(contour_mask, contourList, index, new Scalar(255),
-                -1);
-
-        Log.d("Contour", "size of contour is: " + contourList.get(index).size());
-
-        /*
-        // find outer corners of chessboard
-        double epsilon = 0.1*Imgproc.arcLength(new MatOfPoint2f(contourList.get(index).toArray()),true);
-        MatOfPoint2f approx = new MatOfPoint2f();
-        Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(index).toArray()),approx,epsilon,true);
-        Log.d("Contour corner", "Corner: " + approx.rows());
-
-         */
-
-        /*
-        //Drawing all contours on a new image
-        Mat contours = new Mat();
-        contours.create(cannyEdges.rows()
-                ,cannyEdges.cols(),CvType.CV_8UC3);
-        Random r = new Random();
-        for(int i = 0; i < contourList.size(); i++)
-        {
-            Imgproc.drawContours(contours
-                    ,contourList,i,new Scalar(r.nextInt(255)
-                            ,r.nextInt(255),r.nextInt(255)), -1);
-        }
-        */
-
-        // apply mask on grayMat
-        Mat masked_mat = new Mat();
-        //Log.d("Size", "Size 1: " + contour_mask.size() + " Size 2: " + originalMat.size());
-        Core.bitwise_and(contour_mask, grayMat, masked_mat);
-
-
-        /**Hough Line part**/
-
-        Mat lines = new Mat();
-        /* find hough line */
-
-        Imgproc.medianBlur(masked_mat, masked_mat, 23);
-
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(masked_mat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 9, 0);
-
-        Imgproc.medianBlur(binaryMat, binaryMat, 5);
-
-        Imgproc.Canny(binaryMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
-
-        Imgproc.HoughLinesP(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, houghLinesMinLineLength, houghLinesMaxLineGap);
-
-        //Imgproc.HoughLines(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, 0, 0, houghLinesMinLineLength, houghLinesMaxLineGap);
-
-        Mat houghLines = src.clone();
-
-
-
-        List<Line> crossLine = new ArrayList<Line>();
-
-        Log.d("LENGTH", " " + lines.rows());
-
-        if (lines.rows() < 2)
-            return null;
-
-        // store line in list
-        for (int i = 0; i < lines.rows(); i++) {
-            double[] points = lines.get(i,0);
-            Line l = new Line(points, src.width(), src.height());
-            crossLine.add(l);
-        }
-
-        /* cluster lines in two groups -- horizontal group and vertical group */
-
-
-        Map<Centroid, List<Line>> clusters = KMeans.fit(crossLine, 2, new HoughDistance(), 500);
-
-        //Map<Centroid, List<Line>> clusters_a = KMeans.fit2((List<Line>)clusters.values().toArray()[0], 2, new HoughDistance(), 500);
-
-        /*  cluster lines in each group by crossPointCluster -- expected 9,9  */
-        Centroid verticalCent;
-        Centroid horizontalCent;
-
-        Centroid firstCent = (Centroid)clusters.keySet().toArray()[0];
-        Centroid secondCent = (Centroid)clusters.keySet().toArray()[1];
-        //Log.d("Orientation", "first cent: " + Math.abs(firstCent.line.getTheta()));
-        //Log.d("Orientation", "second cent: " + Math.abs(secondCent.line.getTheta()));
-        if(Math.abs(firstCent.line.getTheta()) > Math.abs(secondCent.line.getTheta())){
-            horizontalCent = secondCent;
-            verticalCent = firstCent;
-        }else{
-            horizontalCent = firstCent;
-            verticalCent = secondCent;
-        }
-
-        List<LineWithPoint> lineWithPoints_v = new ArrayList<>();
-        List<LineWithPoint> lineWithPoints_h = new ArrayList<>();
-
-        // calculate intersection points between all vercital line and a horizoncel line
-
-        // get one line of another group
-        Line hzLine = clusters.get(horizontalCent).get(0);
-        Line vtLine = clusters.get(verticalCent).get(0);
-
-        for(Line line: clusters.get(verticalCent)){
-            Point ins = Intersection.calculate(line.getP1(), line.getP2(), hzLine.getP1(), hzLine.getP2());
-            lineWithPoints_v.add(new LineWithPoint(line, ins));
-        }
-
-        for(Line line: clusters.get(horizontalCent)){
-            Point ins = Intersection.calculate(line.getP1(), line.getP2(), vtLine.getP1(), vtLine.getP2());
-            lineWithPoints_h.add(new LineWithPoint(line, ins));
-        }
-
-        // cluster cross points by coordinates
-        Map<Centroid, List<LineWithPoint>> verticalIntersectionClusters = KMeans.fit2_point(lineWithPoints_v, 60, new PointDistance(), 500);
-        Map<Centroid, List<LineWithPoint>> horizontalIntersectionClusters = KMeans.fit2_point(lineWithPoints_h, 60, new PointDistance(), 500);
-
-        // sort verticalIntersectionClusters's keys in order according to their point
-        Map<Centroid, List<LineWithPoint>> sortedVerticalClusters = new TreeMap<>(new CentroidComparator());
-        Map<Centroid, List<LineWithPoint>> sortedHorizontalClusters = new TreeMap<>(new CentroidComparator());
-        sortedVerticalClusters.putAll(verticalIntersectionClusters);
-        sortedHorizontalClusters.putAll(horizontalIntersectionClusters);
-
-        // convert to standard cluster type for looping
-        ArrayList<List<Line>> sortedVerticalClusters_SD = new ArrayList<>();
-        ArrayList<List<Line>> sortedHorizontalClusters_SD = new ArrayList<>();
-
-        for(Map.Entry<Centroid, List<LineWithPoint>> entry: sortedVerticalClusters.entrySet()){
-            // Convert List<LineWithPoint> to List<Line>
-            Log.d("Point", "GP ---------");
-            List<Line> gp = new ArrayList<>();
-            for(LineWithPoint lp: entry.getValue()){
-                gp.add(lp.line);
-                Log.d("Point", " x = " + lp.point.x + " y = " + lp.point.y);
-            }
-            sortedVerticalClusters_SD.add(gp);
-        }
-
-        for(Map.Entry<Centroid, List<LineWithPoint>> entry: sortedHorizontalClusters.entrySet()){
-            // Convert List<LineWithPoint> to List<Line>
-            Log.d("Point", "GP ---------");
-            List<Line> gp = new ArrayList<>();
-            for(LineWithPoint lp: entry.getValue()){
-                gp.add(lp.line);
-                Log.d("Point", " x = " + lp.point.x + " y = " + lp.point.y);
-            }
-            sortedHorizontalClusters_SD.add(gp);
-        }
-
-
-
-        Random random = new Random();
-
-        // Write line data to file for python analyzing
-        // OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput("line_data.txt", Context.MODE_PRIVATE));
-        // i indicates different clusters
-
-        int colors[] = new int[]{
-                Color.BLUE,
-                Color.YELLOW,
-                Color.CYAN,
-                Color.MAGENTA,
-                Color.BLACK,
-                Color.DKGRAY,
-                Color.GRAY,
-                Color.LTGRAY,
-                Color.WHITE,
-                Color.RED,
-                Color.GREEN,
-                0x663366,
-                0xFF6666,
-                0xCCCC00,
-                0x734C00,
-                0x3CCC00
-        };
-
-
-        /* Calculate mean line of each group and removing duplicated line */
-        List<Line> verticalCrossLine = new ArrayList<>();
-        List<Line> horizontalCrossLine = new ArrayList<>();
-        //int i = 0;
-        for(List<Line> line_gp: sortedVerticalClusters_SD){
-            Scalar scalar = new Scalar(random.nextDouble()*255, random.nextDouble()*255, random.nextDouble()*255, 255);
-            //Log.d("Line", "Color: " + scalar);
-            Line meanLine = calculateMeanLine(line_gp);
-            verticalCrossLine.add(meanLine);
-            Imgproc.line(houghLines, meanLine.getP1(), meanLine.getP2(), scalar, 1);
-            //i++;
-        }
-
-        //i = 0;
-        for(List<Line> line_gp: sortedHorizontalClusters_SD){
-            Scalar scalar = new Scalar(random.nextDouble()*255, random.nextDouble()*255, random.nextDouble()*255, 255);
-            //Log.d("Line", "Color: " + scalar);
-            Line meanLine = calculateMeanLine(line_gp);
-            horizontalCrossLine.add(meanLine);
-            Imgproc.line(houghLines, meanLine.getP1(), meanLine.getP2(), scalar, 1);
-            //i++;
-        }
-
-
-
-        //outputStreamWriter.write(i + " " + line.getTheta() + " " + line.getRtho() + "\n");
-
-        //outputStreamWriter.close();
-
-
-
-        /*for(int i = 0; i < approx.rows(); i++){
-            Point p = new Point(approx.get(i, 0));
-            Imgproc.circle(masked_mat, p,
-                    10, new Scalar(255,0,0), 2);
-        }*/
-
-
-
-        /*  calculate intersection points between two refined groups */
-        List<List<Point>> intersectPoints = new ArrayList<>();
-
-        Collections.reverse(verticalCrossLine);
-
-        for(Line line_a: verticalCrossLine){
-            List<Point> rowPoints = new ArrayList<>();
-            for(Line line_b: horizontalCrossLine){
-                rowPoints.add(Intersection.calculate(line_a.getP1(), line_a.getP2(), line_b.getP1(), line_b.getP2()));
-            }
-            intersectPoints.add(rowPoints);
-        }
-
-        /*
-        for(List<Point> row : intersectPoints){
-            for(Point p : row)
-                Imgproc.circle(houghLines, p,
-                    30, new Scalar(0,255,0, 255), 10);
-            //outputStreamWriter.write(i + " " + p.x + " " + p.y + "\n");
-        }
-        */
-
-
-
-        /**  match chessboard part **/
-        if(intersectPoints.size() > 8 && intersectPoints.get(0).size() > 8) {
-            Point[][] chessboardReferenceModel = new Point[9][9];
-            // initialize the chessboard
-            for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j++) {
-                    chessboardReferenceModel[i][j] = new Point(blockSize * j, blockSize * i);
-                }
-
-            // chessboard kernel mat
-            List<List<Point>> kernelMat = new ArrayList<>();
-            double minDistance = Double.MAX_VALUE;
-
-            // top left corner
-            int idx_x = 0;
-            int idx_y = 0;
-            // outer Dot Mat loop, locate top left corner of the mat, size of chessboard is 9x9
-            // boundary is 8 not 9
-            for (int row = 0; row < intersectPoints.size() - 8; row++)
-                for (int col = 0; col < intersectPoints.get(row).size() - 8; col++) {
-                    // inner Chessboard kernel loop
-
-                    // crop 9x9 points array
-                    Point[][] chessboardModel = new Point[9][9];
-                    for (int i = 0; i < 9; i++) {
-                        for (int j = 0; j < 9; j++) {
-                            chessboardModel[i][j] = intersectPoints.get(row + i).get(col + j);
-                        }
-                    }
-                    // calculate distance from this model to chessboard reference model
-                    double bD = distanceToChessboardModel(chessboardModel, chessboardReferenceModel);
-                    //Log.d("Distance", "Distance to model reference: " + bD);
-
-                    if (bD < minDistance) {
-                        chessboardMatchTransform = recentAppliedTransform;
-                        detectedChessboardModel = chessboardModel;
-                        minDistance = bD;
-                        idx_x = row;
-                        idx_y = col;
-                    }
-                }
-
-            for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j++) {
-                    Point p = intersectPoints.get(idx_x + i).get(idx_y + j);
-                    Imgproc.circle(houghLines, p,
-                            5, new Scalar(0, 255, 0, 255), 1);
-                }
-        }
-
-
-        /*
-        //Converting Mat back to Bitmap
-        Utils.matToBitmap(houghLines, currentBitmap);
-        loadImageToImageView();
-
-         */
-        return houghLines;
 
     }
 
@@ -1165,11 +635,14 @@ public class ImageProcessor {
         return pieces;
     }
 
-    public static char getColor(int currI, int refI){
-        if(currI - refI > 0)
+    public static char getColor(int currI, int refI) {
+        if (currI - refI > color_thres)
             return CameraFragment.W;
-        else
+        else if (currI - refI < - color_thres)
             return CameraFragment.B;
+        else
+            return CameraFragment.E;
+
     }
 
     public void showAOI_Origin(){
@@ -1359,351 +832,21 @@ public class ImageProcessor {
 
     }
 
-    // a grid points: row x column
-    public static List<List<Point>> getIntersetPoints(Mat src){
-        List<List<Point>> intersectPoints = new ArrayList<>();
 
-        /**mask part**/
-        Mat grayMat = new Mat();
-        Mat binaryMat = new Mat();
-        Mat cannyEdges = new Mat();
-        Mat hierarchy = new Mat();
-        List<MatOfPoint> contourList = new
-                ArrayList<MatOfPoint>();
-        //A list to store all the contours
-        //Converting the image to grayscale
 
-        /* Canny Edge */
-        //Converting the image to grayscale
-        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-
-        Imgproc.Canny(grayMat, cannyEdges,cannyEdgeThres1, cannyEdgeThres2);
-
-        // dilate the binary mat
-        Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
-        Imgproc.dilate(cannyEdges, cannyEdges, kernelDilate);
-
-        /* Contour */
-        //finding contours
-        Imgproc.findContours(cannyEdges,contourList
-                ,hierarchy,Imgproc.RETR_CCOMP,
-                Imgproc.CHAIN_APPROX_SIMPLE);
-
-        if(contourList.size() == 0)
-            return intersectPoints;
-
-
-        // find largest contour
-        int index = 0;
-        double maxim = Imgproc.contourArea(contourList.get(0));
-        for (int contourIdx = 1; contourIdx < contourList.size();
-             contourIdx++) {
-            double temp;
-            temp=Imgproc.contourArea(contourList.get(contourIdx));
-            if(maxim<temp)
-            {
-                maxim=temp;
-                index=contourIdx;
-            }
-        }
-
-        // get mask with in shape of largest contour
-        Mat contour_mask = Mat.zeros(cannyEdges.rows()
-                ,cannyEdges.cols(), CvType.CV_8UC1);
-        Imgproc.drawContours(contour_mask, contourList, index, new Scalar(255),
-                -1);
-
-        Log.d("Contour", "size of contour is: " + contourList.get(index).size());
-
-        /*
-        // find outer corners of chessboard
-        double epsilon = 0.1*Imgproc.arcLength(new MatOfPoint2f(contourList.get(index).toArray()),true);
-        MatOfPoint2f approx = new MatOfPoint2f();
-        Imgproc.approxPolyDP(new MatOfPoint2f(contourList.get(index).toArray()),approx,epsilon,true);
-        Log.d("Contour corner", "Corner: " + approx.rows());
-
-         */
-
-        /*
-        //Drawing all contours on a new image
-        Mat contours = new Mat();
-        contours.create(cannyEdges.rows()
-                ,cannyEdges.cols(),CvType.CV_8UC3);
-        Random r = new Random();
-        for(int i = 0; i < contourList.size(); i++)
-        {
-            Imgproc.drawContours(contours
-                    ,contourList,i,new Scalar(r.nextInt(255)
-                            ,r.nextInt(255),r.nextInt(255)), -1);
-        }
-        */
-
-        // apply mask on grayMat
-        Mat masked_mat = new Mat();
-        //Log.d("Size", "Size 1: " + contour_mask.size() + " Size 2: " + originalMat.size());
-        Core.bitwise_and(contour_mask, grayMat, masked_mat);
-
-
-        /**Hough Line part**/
-
-        Mat lines = new Mat();
-        /* find hough line */
-
-        Imgproc.medianBlur(masked_mat, masked_mat, 23);
-
-        //Imgproc.threshold(grayMat, binaryMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(masked_mat, binaryMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
-                Imgproc.THRESH_BINARY, 9, 0);
-
-        Imgproc.medianBlur(binaryMat, binaryMat, 5);
-
-        Imgproc.Canny(binaryMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
-
-        Imgproc.HoughLinesP(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, houghLinesMinLineLength, houghLinesMaxLineGap);
-
-        //Imgproc.HoughLines(cannyEdges, lines, 1, Math.PI / 180, houghLinesThres, 0, 0, houghLinesMinLineLength, houghLinesMaxLineGap);
-
-        Mat houghLines = src.clone();
-
-
-
-        List<Line> crossLine = new ArrayList<Line>();
-
-        Log.d("LENGTH", " " + lines.rows());
-
-        if (lines.rows() < 2)
-            return intersectPoints;
-
-        // store line in list
-        for (int i = 0; i < lines.rows(); i++) {
-            double[] points = lines.get(i,0);
-            Line l = new Line(points, src.height(), src.width());
-            crossLine.add(l);
-        }
-
-        /* cluster lines in two groups -- horizontal group and vertical group */
-
-
-        Map<Centroid, List<Line>> clusters = KMeans.fit(crossLine, 2, new HoughDistance(), 500);
-
-        //Map<Centroid, List<Line>> clusters_a = KMeans.fit2((List<Line>)clusters.values().toArray()[0], 2, new HoughDistance(), 500);
-
-        /*  cluster lines in each group by crossPointCluster -- expected 9,9  */
-        Centroid verticalCent;
-        Centroid horizontalCent;
-
-        Centroid firstCent = (Centroid)clusters.keySet().toArray()[0];
-        Centroid secondCent = (Centroid)clusters.keySet().toArray()[1];
-        //Log.d("Orientation", "first cent: " + Math.abs(firstCent.line.getTheta()));
-        //Log.d("Orientation", "second cent: " + Math.abs(secondCent.line.getTheta()));
-        if(Math.abs(firstCent.line.getTheta()) > Math.abs(secondCent.line.getTheta())){
-            horizontalCent = secondCent;
-            verticalCent = firstCent;
-        }else{
-            horizontalCent = firstCent;
-            verticalCent = secondCent;
-        }
-
-        List<LineWithPoint> lineWithPoints_v = new ArrayList<>();
-        List<LineWithPoint> lineWithPoints_h = new ArrayList<>();
-
-        // calculate intersection points between all vercital line and a horizoncel line
-
-        // get one line of another group
-        Line hzLine = clusters.get(horizontalCent).get(0);
-        Line vtLine = clusters.get(verticalCent).get(0);
-
-        for(Line line: clusters.get(verticalCent)){
-            Point ins = Intersection.calculate(line.getP1(), line.getP2(), hzLine.getP1(), hzLine.getP2());
-            lineWithPoints_v.add(new LineWithPoint(line, ins));
-        }
-
-        for(Line line: clusters.get(horizontalCent)){
-            Point ins = Intersection.calculate(line.getP1(), line.getP2(), vtLine.getP1(), vtLine.getP2());
-            lineWithPoints_h.add(new LineWithPoint(line, ins));
-        }
-
-        // cluster cross points by coordinates
-        Map<Centroid, List<LineWithPoint>> verticalIntersectionClusters = KMeans.fit2_point(lineWithPoints_v, 60, new PointDistance(), 500);
-        Map<Centroid, List<LineWithPoint>> horizontalIntersectionClusters = KMeans.fit2_point(lineWithPoints_h, 60, new PointDistance(), 500);
-
-        // sort verticalIntersectionClusters's keys in order according to their point
-        Map<Centroid, List<LineWithPoint>> sortedVerticalClusters = new TreeMap<>(new CentroidComparator());
-        Map<Centroid, List<LineWithPoint>> sortedHorizontalClusters = new TreeMap<>(new CentroidComparator());
-        sortedVerticalClusters.putAll(verticalIntersectionClusters);
-        sortedHorizontalClusters.putAll(horizontalIntersectionClusters);
-
-        // convert to standard cluster type for looping
-        ArrayList<List<Line>> sortedVerticalClusters_SD = new ArrayList<>();
-        ArrayList<List<Line>> sortedHorizontalClusters_SD = new ArrayList<>();
-
-        for(Map.Entry<Centroid, List<LineWithPoint>> entry: sortedVerticalClusters.entrySet()){
-            // Convert List<LineWithPoint> to List<Line>
-            Log.d("Point", "GP ---------");
-            List<Line> gp = new ArrayList<>();
-            for(LineWithPoint lp: entry.getValue()){
-                gp.add(lp.line);
-                Log.d("Point", " x = " + lp.point.x + " y = " + lp.point.y);
-            }
-            sortedVerticalClusters_SD.add(gp);
-        }
-
-        for(Map.Entry<Centroid, List<LineWithPoint>> entry: sortedHorizontalClusters.entrySet()){
-            // Convert List<LineWithPoint> to List<Line>
-            Log.d("Point", "GP ---------");
-            List<Line> gp = new ArrayList<>();
-            for(LineWithPoint lp: entry.getValue()){
-                gp.add(lp.line);
-                Log.d("Point", " x = " + lp.point.x + " y = " + lp.point.y);
-            }
-            sortedHorizontalClusters_SD.add(gp);
-        }
-
-
-
-        Random random = new Random();
-
-        // Write line data to file for python analyzing
-        //OutputStreamWriter outputStreamWriter = new OutputStreamWriter(this.openFileOutput("line_data.txt", Context.MODE_PRIVATE));
-        // i indicates different clusters
-
-        int colors[] = new int[]{
-                Color.BLUE,
-                Color.YELLOW,
-                Color.CYAN,
-                Color.MAGENTA,
-                Color.BLACK,
-                Color.DKGRAY,
-                Color.GRAY,
-                Color.LTGRAY,
-                Color.WHITE,
-                Color.RED,
-                Color.GREEN,
-                0x663366,
-                0xFF6666,
-                0xCCCC00,
-                0x734C00,
-                0x3CCC00
-        };
-
-
-        /* Calculate mean line of each group and removing duplicated line */
-        List<Line> verticalCrossLine = new ArrayList<>();
-        List<Line> horizontalCrossLine = new ArrayList<>();
-        //int i = 0;
-        for(List<Line> line_gp: sortedVerticalClusters_SD){
-            Scalar scalar = new Scalar(random.nextDouble()*255, random.nextDouble()*255, random.nextDouble()*255, 255);
-            //Log.d("Line", "Color: " + scalar);
-            Line meanLine = calculateMeanLine(line_gp);
-            verticalCrossLine.add(meanLine);
-            Imgproc.line(houghLines, meanLine.getP1(), meanLine.getP2(), scalar, 1);
-            //i++;
-        }
-
-        //i = 0;
-        for(List<Line> line_gp: sortedHorizontalClusters_SD){
-            Scalar scalar = new Scalar(random.nextDouble()*255, random.nextDouble()*255, random.nextDouble()*255, 255);
-            //Log.d("Line", "Color: " + scalar);
-            Line meanLine = calculateMeanLine(line_gp);
-            horizontalCrossLine.add(meanLine);
-            Imgproc.line(houghLines, meanLine.getP1(), meanLine.getP2(), scalar, 1);
-            //i++;
-        }
-
-
-
-        //outputStreamWriter.write(i + " " + line.getTheta() + " " + line.getRtho() + "\n");
-
-        //outputStreamWriter.close();
-
-
-
-        /*for(int i = 0; i < approx.rows(); i++){
-            Point p = new Point(approx.get(i, 0));
-            Imgproc.circle(masked_mat, p,
-                    10, new Scalar(255,0,0), 2);
-        }*/
-
-
-
-        /*  calculate intersection points between two refined groups */
-
-
-        Collections.reverse(verticalCrossLine);
-
-        for(Line line_a: verticalCrossLine){
-            List<Point> rowPoints = new ArrayList<>();
-            for(Line line_b: horizontalCrossLine){
-                rowPoints.add(Intersection.calculate(line_a.getP1(), line_a.getP2(), line_b.getP1(), line_b.getP2()));
-            }
-            intersectPoints.add(rowPoints);
-        }
-
-        return intersectPoints;
-    }
-
-    public static Match getChessBoardPointsAndMatrix(List<List<Point>> intersectPoints){
-        /**  match chessboard part **/
-        if(intersectPoints.size() > 8 && intersectPoints.get(0).size() > 8) {
-            Point[][] chessboardReferenceModel = new Point[9][9];
-            // initialize the chessboard
-            for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j++) {
-                    chessboardReferenceModel[i][j] = new Point(blockSize * j, blockSize * i);
-                }
-
-            // chessboard kernel mat
-            List<List<Point>> kernelMat = new ArrayList<>();
-            double minDistance = Double.MAX_VALUE;
-
-            // top left corner
-            int idx_x = 0;
-            int idx_y = 0;
-            // outer Dot Mat loop, locate top left corner of the mat, size of chessboard is 9x9
-            // boundary is 8 not 9
-            for (int row = 0; row < intersectPoints.size() - 8; row++)
-                for (int col = 0; col < intersectPoints.get(row).size() - 8; col++) {
-                    // inner Chessboard kernel loop
-
-                    // crop 9x9 points array
-                    Point[][] chessboardModel = new Point[9][9];
-                    for (int i = 0; i < 9; i++) {
-                        for (int j = 0; j < 9; j++) {
-                            chessboardModel[i][j] = intersectPoints.get(row + i).get(col + j);
-                        }
-                    }
-                    // calculate distance from this model to chessboard reference model
-                    double bD = distanceToChessboardModel(chessboardModel, chessboardReferenceModel);
-                    //Log.d("Distance", "Distance to model reference: " + bD);
-
-                    if (bD < minDistance) {
-                        chessboardMatchTransform = recentAppliedTransform;
-                        detectedChessboardModel = chessboardModel;
-                        minDistance = bD;
-                        idx_x = row;
-                        idx_y = col;
-                    }
-                }
-            return new Match(detectedChessboardModel, chessboardMatchTransform);
-        }else
-            return null;
-    }
 
     // get average intensity of the grid
-    public static int[][] getIntensity(Mat grid){
+    public static int[][] getIntensity(Mat grayMat){
         // 8 x 8 grids
 
         int[][] intensities = new int[8][8];
 
         //Mat chessboardMat = new Mat(currentBitmap.getHeight(), currentBitmap.getWidth(), CvType.CV_8U);
         //Utils.bitmapToMat(currentBitmap, chessboardMat);
-        Mat grayMat = new Mat();
-        Imgproc.cvtColor(grid, grayMat, Imgproc.COLOR_BGR2GRAY);
-
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++) {
                 Point start = new Point(blockSize * i + AOI_indent, blockSize * j + AOI_indent);
-                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * j + AOI_indent + AOI_height);
+                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * (j+1) - AOI_indent);
                 Mat block = grayMat.submat((int) start.x, (int) end.x, (int) start.y, (int) end.y);
                 double mu = Core.mean(block).val[0];
                 //Imgproc.putText(chessboardMat, (int)mu + "", new Point(start.x,start.y), Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(150,255, 23));
@@ -1723,24 +866,24 @@ public class ImageProcessor {
     // get number of edges on each block
     public static int[][] getEdges(Mat src){
         int[][] edges = new int[8][8];
-        Mat cannyEdges = Canny(src);
+        Mat cannyEdges = Canny2(src);
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++) {
-                Point start = new Point(blockSize * i + AOI_indent, blockSize * j + AOI_indent);
-                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * j + AOI_indent + AOI_height);
+                Point start = new Point(blockSize*i + AOI_indent, blockSize * j + AOI_indent);
+                Point end = new Point(blockSize*(i+1) - AOI_indent, blockSize * (j+1) - AOI_indent);
                 edges[i][j] = countCannyEdgeInAOI(cannyEdges, start, end, 150);
             }
         return edges;
     }
 
     public static Mat drawPoint(Mat src, Point[][] points){
-        if(points.length == 0 || points[0].length == 0)
+        if(points == null)
             return src;
         Mat dest = src.clone();
         for (int i = 0; i < points.length; i++)
             for (int j = 0; j < points[0].length; j++) {
                 Imgproc.circle(dest, points[i][j],
-                        15, new Scalar(0, 255, 0, 255), 2);
+                        5, new Scalar(0, 255, 0, 255), 1);
             }
         return dest;
     }
@@ -1748,8 +891,8 @@ public class ImageProcessor {
 
     public static Mat calibrate(Mat src){
         // get transformMat and chessboard points
-        List<List<Point>> boardPoints = getIntersetPoints(src);
-        Match pointsAndTranf = getChessBoardPointsAndMatrix(boardPoints);
+        List<List<Point>> boardPoints = ClusterLinesAndIntersection(src);
+        Match pointsAndTranf = MatchChessboard(boardPoints);
         // get intensifies and edges
         if (pointsAndTranf != null){
             Mat AOI = tranformInterestArea(src, pointsAndTranf.tranf);

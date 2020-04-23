@@ -1,7 +1,5 @@
 package com.example.ChessPlayerApp.robot_arm.Recognition;
 
-import android.Manifest;
-import android.media.Image;
 import android.os.Bundle;
 
 import android.util.Log;
@@ -13,30 +11,26 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.example.ChessPlayerApp.R;
+import com.example.ChessPlayerApp.chessboardcamera.Filter.AverageFIlter;
 import com.example.ChessPlayerApp.chessboardcamera.ImageProcessor;
 import com.example.ChessPlayerApp.chessboardcamera.KmeanCluster.Match;
 import com.example.ChessPlayerApp.chessboardcamera.ZoomCameraView;
 import com.example.ChessPlayerApp.robot_arm.Chess.ChessFragment;
 import com.example.ChessPlayerApp.robot_arm.Chess.MoveCalculator;
 import com.example.ChessPlayerApp.robot_arm.Chess.TheEngine;
-import com.example.ChessPlayerApp.robot_arm.RobotArmControllerActivity;
-import com.google.android.material.snackbar.Snackbar;
 
 
-import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
 import static com.example.ChessPlayerApp.robot_arm.Chess.ChessFragment.getNextMove;
@@ -80,8 +74,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     Button matchModeButton;
 
     boolean calibrated = false;
-    boolean firstClicked_cali = false;
-    boolean firstClicked_move = false;
+
 
     public static int[][] cali_Intensities = new int[8][8];
     public static int[][] cali_Edges = new int[8][8];
@@ -103,6 +96,12 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     };
     public static char[][] lastPcl;
     public char[][] currPcl;
+
+
+    // Filter
+    AverageFIlter edgeFilter = new AverageFIlter(5);
+    AverageFIlter intenFilter = new AverageFIlter(5);
+
 
 
     public static CameraFragment getInstance(){
@@ -257,38 +256,47 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     }
 
     public Mat GameMonitor(Mat src){
+
+        Mat grayMat = new Mat();
+        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
+
         // get transformMat and chessboard points
-        List<List<Point>> boardPoints = ImageProcessor.getIntersetPoints(src);
-        Match pointsAndTranf = ImageProcessor.getChessBoardPointsAndMatrix(boardPoints);
+        List<List<Point>> boardPoints = ImageProcessor.ClusterLinesAndIntersection(grayMat);
+        Match pointsAndTranf = ImageProcessor.MatchChessboard(boardPoints);
         // get intensifies and edges
-        if (pointsAndTranf != null){
-            Mat AOI = ImageProcessor.tranformInterestArea(src, pointsAndTranf.tranf);
-            int[][] currIntensities = ImageProcessor.getIntensity(AOI);
-            int[][] currEdges = ImageProcessor.getEdges(AOI);
+        if (pointsAndTranf.points != null){
+            Mat AOI = ImageProcessor.tranformInterestArea(grayMat, pointsAndTranf.tranf);
+            intenFilter.update(ImageProcessor.getIntensity(AOI));
+            edgeFilter.update(ImageProcessor.getEdges(AOI));
+            currIntensities = intenFilter.getAvg();
+            currEdges = edgeFilter.getAvg();
+
             src = ImageProcessor.drawPoint(src, pointsAndTranf.points);
+
+
+
 
             //cali_Intensities = intensities;
             //cali_Edges = edges;
-            currPcl = ImageProcessor.getPieceColor(currEdges, cali_Edges, currIntensities, cali_Intensities);
-
-            if (calibrated && whiteTurn){
-                // only calibrated can you do:
-                //currPcl = ImageProcessor.getPieceColor(edges, cali_Edges, intensities, cali_Intensities);
-            }else if(calibrated && !whiteTurn){
-                // no need to update lastPcl, since it has been updated from theBoard in TheEngine.java
-            }
-
-            // Show currPcl on mat
-
-
-            /*
-            for(int i = 0; i < 8; i ++)
-                for(int j = 0; j < 8; j ++){
-                    //Imgproc.putText(src, " E: "+ edges[i][j] + "\n I: " + (int)intensities[i][j], pointsAndTranf.points[i][j], Core.FONT_HERSHEY_COMPLEX, 3, new Scalar(255,0, 0,255), 4);
-                    //Log.d("Info", " E: "+ edges[i][j] + ", I: " + intensities[i][j]);
+            if (calibrated){
+                currPcl = ImageProcessor.getPieceColor(currEdges, cali_Edges, currIntensities, cali_Intensities);
+                printPcl(currPcl);
+                // Show currPcl on mat
+                for(int i = 0; i < 8; i ++)
+                    for(int j = 0; j < 8; j ++){
+                        Imgproc.putText(src, ""+ currPcl[i][j], pointsAndTranf.points[j][i], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        //Log.d("Info", " E: "+ currEdges[i][j] + ", I: " + currIntensities[i][j]);
+                    }
+                if (whiteTurn){
+                    // only calibrated can you do:
+                    //currPcl = ImageProcessor.getPieceColor(edges, cali_Edges, intensities, cali_Intensities);
+                }else if(!whiteTurn){
+                    // no need to update lastPcl, since it has been updated from theBoard in TheEngine.java
                 }
 
-             */
+            }
+
+
             // put data in original mat
             //Imgproc.putText(chessboardMat, (int)mu + "", new Point(start.x,start.y), Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(150,255, 23));
 
@@ -298,47 +306,66 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         return src;
     }
 
+    public void printPcl(char[][] pcl){
+        String re = "";
+        for(int i = 0; i < 8; i ++) {
+            for (int j = 0; j < 8; j++) {
+                re += pcl[i][j];
+            }
+            re += "\n";
+        }
+        Log.d("PCL", re);
+
+    }
 
 
 
 
     @Override
     public void onCameraViewStarted(int width, int height) {
-
+        Log.d("CameraEvent", "Camera start");
     }
 
     @Override
     public void onCameraViewStopped() {
-
+        Log.d("CameraEvent", "Camera stop");
     }
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+        /*
         Mat mRgba = inputFrame.rgba();
         Mat mRgbaT = mRgba.t();
         Core.flip(mRgba.t(), mRgbaT, 1);
         Imgproc.resize(mRgbaT, mRgbaT, mRgba.size());
+         */
 
-        Mat processed = null;
+        Mat src = inputFrame.rgba();
+        //Mat processed = null;
+        Mat grayMat = new Mat();
+        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
+
+        currImg = src;
 
         switch (ImgProMethod){
             case MonitorGame:
-                processed = GameMonitor(mRgbaT);
+                src = GameMonitor(src);
                 break;
 
             case MatchChessBoard:
-                processed  = ImageProcessor.MatchChessboard(mRgbaT);
+                Point[][] chessPoints  = ImageProcessor.MatchChessboard(ImageProcessor.ClusterLinesAndIntersection(grayMat)).points;
+                src = ImageProcessor.drawPoint(src, chessPoints);
                 break;
 
             case Contours:
-                processed  = ImageProcessor.Contours(mRgbaT);
+                src  = ImageProcessor.Contours(grayMat);
                 break;
         }
 
         //Log.d("CameraTest", "It capture frame.");
-        currImg = processed;
 
-        return processed;
+
+        return src;
     }
 
 
