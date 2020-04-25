@@ -47,7 +47,8 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         MonitorGame,
         DetectMove,
         Contours,
-        MatchChessBoard
+        MatchChessBoard,
+        HoughLine
     }
 
     private static CameraFragment instance;
@@ -66,7 +67,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
 
     private Mat currImg = null;
 
-    Mode ImgProMethod = Mode.MonitorGame;
+    Mode ImgProMethod = Mode.HoughLine;
 
     Button caliBtn;
     Button moveBtn;
@@ -284,7 +285,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 // Show currPcl on mat
                 for(int i = 0; i < 8; i ++)
                     for(int j = 0; j < 8; j ++){
-                        Imgproc.putText(src, ""+ currPcl[i][j], pointsAndTranf.points[j][i], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        Imgproc.putText(src, ""+ currIntensities[i][j], pointsAndTranf.points[j][i], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Log.d("Info", " E: "+ currEdges[i][j] + ", I: " + currIntensities[i][j]);
                     }
                 if (whiteTurn){
@@ -360,6 +361,11 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             case Contours:
                 src  = ImageProcessor.Contours(grayMat);
                 break;
+
+            case HoughLine:
+                //Imgproc.cvtColor(mRgba, grayMat, Imgproc.COLOR_BGR2GRAY);
+                Mat lines = ImageProcessor.HoughLines(grayMat);
+                src = ImageProcessor.drawLines(src, lines);
         }
 
         //Log.d("CameraTest", "It capture frame.");
