@@ -29,7 +29,7 @@ import java.util.Random;
 
 public class TheEngine {
     public static boolean gameStarted = false;
-    static boolean robotArmControl = false;
+    static boolean robotArmControl = true;
     static int wKingNeverMove, wKRNeverMove,wQRNeverMove,
             bKingNeverMove,bKRNeverMove,bQRNeverMove;
     public static boolean whiteTurn, stopNow;
@@ -98,7 +98,7 @@ public class TheEngine {
                     -20,  -30,  -30,  -40,  -40,  -30,  -30, -20,
                     -10,  -20,  -20,  -20,  -20,  -20,  -20, -10,
                     20, 20,  0,  0,  0,  0,  20, 20,
-                    20,  30,  10,  0,  0,  10,  30,  20,};
+                    20,  30,  10,  0,  0,  10,  30,  20};
 
     public static String terminal (String s) {
         String term = "";
@@ -110,6 +110,7 @@ public class TheEngine {
         } else if (s.startsWith("makeMove")) {
             String part[] = s.split(",");
             int strength = Integer.parseInt(part[1]);
+            Log.d("WHITETURN", "Is white's turn? " + whiteTurn);
             callForMove(strength);
         } else if (s.startsWith("availMoves")) {
             String part[] = s.split(",");
@@ -173,10 +174,11 @@ public class TheEngine {
         }  else if (s.startsWith("myMove")) {
             String part[] = s.split(",");
             //("myMove", printBoard());
-            makeMove(part[1], robotArmControl);
+            makeMove(part[1], false);
             //("afterMyMove", printBoard());
             term = "moved";
             if (whiteTurn) {whiteTurn = false;} else {whiteTurn = true;}
+            Log.d("AfterMyMove", "Whiteturn? " + whiteTurn);
         }
 
         // Return the term output.
@@ -235,6 +237,7 @@ public class TheEngine {
             // Engine strength is 2 or higher, so make a min/max movePiece.
             String bestMove = "";
             stopNow = true;
+            Log.d("MINIMAXWHITETURN", "Is white turn: " + whiteTurn);
             bestMove = minimaxRoot(engineStrength, whiteTurn);
             // Make sure our board matches the board prior to a movePiece, in case it was
             // messed up when we calculated moves.

@@ -1,5 +1,7 @@
 package com.example.ChessPlayerApp.robot_arm.Chess;
 
+import android.util.Log;
+
 import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
 
 import java.util.ArrayList;
@@ -30,6 +32,8 @@ public class MoveCalculator {
     }
 
      */
+
+
 
     public static String getMove(char[][] from, char[][] to){
         /* Calculate the previous matrix from theBoard */
@@ -67,7 +71,7 @@ public class MoveCalculator {
         int[] secondCli = new int[2];
 
         int fstPos, secPos;
-
+        Log.d("MoveCalc", "position diff is: " + points.size());
         switch (points.size()){
             case 2:
                 for (int[] pos : points){
@@ -80,35 +84,35 @@ public class MoveCalculator {
                 points.remove(firstCli);
                 secondCli = points.get(0);
 
-                char piece = theBoard[firstCli[0] * 8 + firstCli[1]];
+                fstPos = (7-firstCli[0]) * 8 + firstCli[1];
+                secPos = (7-secondCli[0]) * 8 + secondCli[1];
 
+                char piece = theBoard[fstPos];
 
-                fstPos = firstCli[0] * 8 + firstCli[1];
-                secPos = secondCli[0] * 8 + secondCli[1];
 
                 if (from[firstCli[0]][firstCli[1]] == CameraFragment.W){
                     // pown promotion
                     if(piece == 'P' && secondCli[0] == 7){
                         if (secondCli[1] > firstCli[1])
-                            return "Pr" + TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                            return "Pr" + TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secPos];
                         else if (secondCli[1] < firstCli[1])
-                            return "Pl" +  TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                            return "Pl" +  TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secPos];
                         else
-                            return "Pu" +  TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                            return "Pu" +  TheEngine.promoteToW + (secPos < 10? "0" + secPos: secPos) + theBoard[secPos];
                     }
                 }else {
                     // must be black move
                     // pown promotion
                     if (piece == 'p' && secondCli[0] == 0) {
                         if (secondCli[1] > firstCli[1])
-                            return "pr" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                            return "pr" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                         else if (secondCli[1] < firstCli[1])
-                            return "pl" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                            return "pl" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                         else
-                            return "pu" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                            return "pu" + TheEngine.getPromoteToB + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                     }
                 }
-                move = "" + piece + (fstPos < 10 ? "0" + fstPos : fstPos) + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secondCli[0] * 8 + secondCli[1]];
+                move = "" + piece + (fstPos < 10 ? "0" + fstPos : fstPos) + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                 return move;
 
             case 3:
@@ -127,27 +131,27 @@ public class MoveCalculator {
                     }
                 }
 
-                fstPos = firstCli[0] * 8 + firstCli[1];
-                secPos = secondCli[0] * 8 + secondCli[1];
+                fstPos = (7-firstCli[0]) * 8 + firstCli[1];
+                secPos = (7-secondCli[0]) * 8 + secondCli[1];
 
                 if(from[firstCli[0]][firstCli[1]] == CameraFragment.W){
                     if (secondCli[1] > firstCli[1]){
-                        return "PER" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] + 1];
+                        return "PER" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                     }else{
-                        return "PEL" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] - 1];
+                        return "PEL" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                     }
                 }else{
                     if (secondCli[1] > firstCli[1]){
-                        return "per" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] + 1];
+                        return "per" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                     }else{
-                        return "pel" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[firstCli[0] * 8 + firstCli[1] - 1];
+                        return "pel" + (secPos < 10 ? "0" + secPos : secPos) + theBoard[secPos];
                     }
                 }
 
 
             case 4:
                 // white side
-                if (points.get(0)[0] == 0) {
+                if (points.get(0)[0] == 7) {
                     for (int[] pos : points) {
                         if (pos[1] == 0) {
                             //secondCli = new int[]{0, 2};

@@ -42,7 +42,7 @@ public class ControllerFragment extends Fragment implements View.OnClickListener
     public static RoboticArm myRoboticArm;
 
     // Distance from chessboard to original point, block size
-    private double dist = 93;
+    private double dist = 106;
     private double block_size = 31;
     private double piece_y = 0;
 

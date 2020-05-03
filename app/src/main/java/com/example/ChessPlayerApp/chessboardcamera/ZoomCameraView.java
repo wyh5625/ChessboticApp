@@ -23,6 +23,7 @@ public class ZoomCameraView extends JavaCameraView {
         super(context, attrs);
     }
 
+
     public void setPreviewFPS(double min, double max) {
         /*
         List<int[]> ftp = mCamera.getParameters().getSupportedPreviewFpsRange();

@@ -53,7 +53,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
     private Button resetButton;
 
-    static int engineStrength = 3;
+    static int engineStrength = 1;
     public static boolean wTurn;
     boolean firstClick;
     String tryMove;
@@ -61,7 +61,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
     static String moveOptions;
     static int firstNum;
 
-    static boolean pBlack = true;
+    static boolean pBlack = false;
     public static boolean pPass = false;
 
     static TextView mConsole;
@@ -204,7 +204,8 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
         String result = null;
         try {
             // execute, or go on and do that task.
-            result=  task.execute("done").get();
+            result =  task.execute("done").get();
+            Log.d("Result", result);
             // A fail clause.
         } catch (Exception e) {
             e.printStackTrace();
@@ -447,6 +448,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
     public void AIWork(){
         drawBoardPieces();
+
         wTurn = !wTurn;
 
         if (!pPass) {
@@ -457,6 +459,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
             } else {
                 moveOptions= terminal("suggestMove,white");
             }
+            Log.d("TURNIS", "White's turn: " + wTurn);
             if (moveOptions.isEmpty()) {
                 staleOrCheckMate();
                 TheEngine.gameStarted = false;

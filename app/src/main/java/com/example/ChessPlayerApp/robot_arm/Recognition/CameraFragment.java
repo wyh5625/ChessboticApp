@@ -24,7 +24,9 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.Arrays;
@@ -79,6 +81,9 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
 
     public static int[][] cali_Intensities = new int[8][8];
     public static int[][] cali_Edges = new int[8][8];
+
+    public static Mat ref_AOI = null;
+    public static Mat AOI = null;
 
     int[][] currIntensities = null;
     int[][] currEdges = null;
@@ -159,13 +164,16 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             // This mode can only be used before game start, otherwise after the board occupied, the calibration gives wrong reference data of empty board.
             @Override
             public void onClick(View v) {
-                if (!calibrated){
-                    if(currEdges != null && currIntensities != null){
-                        cali_Edges = currEdges;
-                        cali_Intensities = currIntensities;
-                        calibrated = true;
-                    }
+                if(currEdges != null && currIntensities != null){
+                    cali_Edges = currEdges;
+                    cali_Intensities = currIntensities;
+                    ref_AOI = AOI;
+                    calibrated = true;
                 }
+
+                if (TheEngine.gameStarted)
+                    updatePcl(lastPcl, TheEngine.theBoard);
+
                 /*
                 if(!firstClicked_cali){
                     firstClicked_cali = true;
@@ -191,10 +199,16 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 // if game start, white turn,
                 if (TheEngine.whiteTurn && TheEngine.gameStarted){
                     // check pcl
+                    //copyPcl(lastPcl, currPcl);
+                    //currPcl[6][7] = '*';
+                    //currPcl[5][7] = 'w';
                     String myMove = MoveCalculator.getMove(lastPcl, currPcl);
+                    printPcl(lastPcl);
+                    printPcl(currPcl);
+                    Log.d("MyMove", "move: " + myMove);
                     if (myMove != "" && validMove(myMove)){
                         String query = terminal("myMove,"+myMove);
-                        lastPcl = currPcl;
+                        copyPcl(currPcl, lastPcl);
                         AIWork();
                     }else{
                         Log.d("MyMove", "Not a valid move, please try again.");
@@ -203,8 +217,18 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             }
         });
 
+
         return root;
     }
+
+    public void copyPcl(char[][] from, char[][] to){
+        for(int i = 0; i < 8; i ++)
+            for(int j = 0; j < 8; j ++){
+                to[i][j] = from[i][j];
+            }
+    }
+
+
 
     public void AIWork(){
         drawBoardPieces();
@@ -266,17 +290,25 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         Match pointsAndTranf = ImageProcessor.MatchChessboard(boardPoints);
         // get intensifies and edges
         if (pointsAndTranf.points != null){
-            Mat AOI = ImageProcessor.tranformInterestArea(grayMat, pointsAndTranf.tranf);
+            AOI = ImageProcessor.tranformInterestArea(grayMat, pointsAndTranf.tranf);
+            //Mat diff_AOI = AOI;
+            /*
+            if (ref_AOI != null) {
+                Core.absdiff(AOI, ref_AOI, diff_AOI);
+                diff_AOI = normalize(diff_AOI);
+            }
+
+             */
+
             intenFilter.update(ImageProcessor.getIntensity(AOI));
             edgeFilter.update(ImageProcessor.getEdges(AOI));
+
             currIntensities = intenFilter.getAvg();
             currEdges = edgeFilter.getAvg();
 
             src = ImageProcessor.drawPoint(src, pointsAndTranf.points);
-
-
-
-
+            //AOI = ImageProcessor.Canny2(AOI);
+            //AOI.copyTo(src);
             //cali_Intensities = intensities;
             //cali_Edges = edges;
             if (calibrated){
@@ -285,12 +317,29 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 // Show currPcl on mat
                 for(int i = 0; i < 8; i ++)
                     for(int j = 0; j < 8; j ++){
-                        Imgproc.putText(src, ""+ currIntensities[i][j], pointsAndTranf.points[j][i], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        Imgproc.putText(src, ""+ currPcl[i][j], pointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        //Imgproc.putText(src, ""+ currIntensities[i][j], pointsAndTranf.points[i][j+1], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Log.d("Info", " E: "+ currEdges[i][j] + ", I: " + currIntensities[i][j]);
                     }
                 if (whiteTurn){
                     // only calibrated can you do:
-                    //currPcl = ImageProcessor.getPieceColor(edges, cali_Edges, intensities, cali_Intensities);
+                    if (TheEngine.gameStarted){
+                        // check pcl
+                        //copyPcl(lastPcl, currPcl);
+                        //currPcl[6][7] = '*';
+                        //currPcl[5][7] = 'w';
+                        String myMove = MoveCalculator.getMove(lastPcl, currPcl);
+                        //printPcl(lastPcl);
+                        //printPcl(currPcl);
+                        Log.d("MyMove", "move: " + myMove);
+                        if (myMove != "" && validMove(myMove)){
+                            String query = terminal("myMove,"+myMove);
+                            copyPcl(currPcl, lastPcl);
+                            AIWork();
+                        }
+                    }
+                    //currPcl = ImageProcessor.getPieceColor(currEdges, cali_Edges, currIntensities, cali_Intensities);
+                    // calculate its move
                 }else if(!whiteTurn){
                     // no need to update lastPcl, since it has been updated from theBoard in TheEngine.java
                 }
@@ -307,8 +356,22 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         return src;
     }
 
+    public Mat normalize(Mat diffMat){
+        for(int i = 0; i < 8; i ++)
+            for(int j = 0; j < 8; j ++){
+                Core.MinMaxLocResult re = Core.minMaxLoc(diffMat);
+                int newVal = (int)(((diffMat.get(i,j)[0]-re.minVal)/(re.maxVal-re.minVal))*254);
+                diffMat.put(i,j, new double[]{newVal});
+            }
+
+        return diffMat;
+    }
+
+
+
+
     public void printPcl(char[][] pcl){
-        String re = "";
+        String re = "The PCL table: \n";
         for(int i = 0; i < 8; i ++) {
             for (int j = 0; j < 8; j++) {
                 re += pcl[i][j];
@@ -345,7 +408,6 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         //Mat processed = null;
         Mat grayMat = new Mat();
         Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-
         currImg = src;
 
         switch (ImgProMethod){

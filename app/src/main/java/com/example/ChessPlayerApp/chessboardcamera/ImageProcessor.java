@@ -24,6 +24,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -56,13 +57,14 @@ public class ImageProcessor {
 
 
     // value
-    public static int cannyEdgeThres1 = 20;
+    public static int cannyEdgeThres1 = 40;
     public static int cannyEdgeThres2 = 60;
-    public static int houghLinesThres = 100;
-    public static int houghLinesMinLineLength = 100;
-    public static int houghLinesMaxLineGap = 500;
+
+    public static int houghLinesThres = 70;
+    public static int houghLinesMinLineLength = 200;
+    public static int houghLinesMaxLineGap = 100;
     public static int binaryThres = 120;
-    public static int chessboardDetectThres = 7;
+    public static int chessboardDetectThres = 5;
 
 
     private Bitmap currentBitmap;
@@ -72,20 +74,38 @@ public class ImageProcessor {
     static Mat recentAppliedTransform;
     static Mat chessboardMatchTransform;
 
-    public static final int blockSize = 100;
-    public static final int AOI_indent = 10;
+    public static final int blockSize = 50;
+    public static final int AOI_indent = 4;
     public static final int AOI_height = 80;
 
     public static final int AOI_height_origin = 600;
 
     // AOI threshold = min number of canny edge
-    public static final int AOI_canny_thres = 120;
+    public static final int AOI_canny_thres = 80;
 
-    public static final int occpancy_thres = 200;
-    public static final int color_thres = 200;
+    public static final int occpancy_thres = 40;
+    public static final int color_thres = 100;
 
     static Point[][] detectedChessboardModel;
 
+    public static final int avgIntensityWhite = 88;
+    public static final int avgIntensityBlack = 15;
+
+    public static Point[][] chessboardReferenceModel = null;
+    // initialize the chessboard
+
+    // chessboard kernel mat
+
+    public static Point[][] getChessboardReferenceModel(){
+        if (chessboardReferenceModel == null) {
+            chessboardReferenceModel = new Point[9][9];
+            for (int i = 0; i < 9; i++)
+                for (int j = 0; j < 9; j++) {
+                    chessboardReferenceModel[i][j] = new Point(blockSize * j, blockSize * i);
+                }
+        }
+        return chessboardReferenceModel;
+    }
 
 
 
@@ -110,11 +130,17 @@ public class ImageProcessor {
         // its modified version of canny, it only detect canny edge of darker pixel, so that it can remove unnecessary detail. You can convert back to original one by removing code of binary mat
 
         Mat blurMat = new Mat();
-        Imgproc.threshold(grayMat, grayMat, binaryThres, 255, Imgproc.THRESH_BINARY);
+        //Imgproc.threshold(grayMat, grayMat, binaryThres, 255, Imgproc.THRESH_BINARY);
+
+        // ksize must be odd, otherwise it will halt
+        Imgproc.medianBlur(grayMat, grayMat, 3);
+
+        //Imgproc.threshold(grayMat, blurMat, binaryThres, 255, Imgproc.THRESH_BINARY);
+        Imgproc.adaptiveThreshold(grayMat, blurMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 77, 0);
 
 
 
-        return grayMat;
+        return blurMat;
     }
 
     // src: grayscale mat
@@ -128,13 +154,19 @@ public class ImageProcessor {
 
         // ksize must be odd, otherwise it will halt
         Imgproc.medianBlur(grayMat, grayMat, 11);
-        //Imgproc.threshold(grayMat, blurMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        //Imgproc.adaptiveThreshold(grayMat, blurMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 3, 0);
-
-        //Imgproc.medianBlur(grayMat, grayMat, 9);
 
 
-        return grayMat;
+
+        //sharpen edges
+        Mat kernel = new Mat(3,3,CvType.CV_16SC1);
+        kernel.put(0, 0, 0, -1, 0, -1, 5, -1, 0, -1, 0);
+        Imgproc.filter2D(grayMat, blurMat, blurMat.depth(), kernel);
+
+        Imgproc.medianBlur(blurMat, blurMat, 5);
+
+        //Imgproc.GaussianBlur(blurMat, blurMat, new Size(7,7), 0);
+
+        return blurMat;
     }
 
 
@@ -340,16 +372,9 @@ public class ImageProcessor {
 
         /**  match chessboard part **/
         if(intersectPoints.size() > 8 && intersectPoints.get(0).size() > 8) {
-            Point[][] chessboardReferenceModel = new Point[9][9];
-            // initialize the chessboard
-            for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j++) {
-                    chessboardReferenceModel[i][j] = new Point(blockSize * j, blockSize * i);
-                }
-            // chessboard kernel mat
             List<List<Point>> kernelMat = new ArrayList<>();
             double minDistance = Double.MAX_VALUE;
-
+            Point[][] refModel = getChessboardReferenceModel();
             // top left corner
             int idx_x = 0;
             int idx_y = 0;
@@ -367,7 +392,7 @@ public class ImageProcessor {
                         }
                     }
                     // calculate distance from this model to chessboard reference model
-                    double bD = distanceToChessboardModel(chessboardModel, chessboardReferenceModel);
+                    double bD = distanceToChessboardModel(chessboardModel, refModel);
                     //Log.d("Distance", "Distance to model reference: " + bD);
 
                     if (bD < minDistance && bD < chessboardDetectThres) {
@@ -424,6 +449,8 @@ public class ImageProcessor {
         /* cluster lines in two groups -- horizontal group and vertical group */
         Map<Centroid, List<Line>> clusters = KMeans.fit(crossLine, 2, new HoughDistance(), 500);
 
+        // remove those lines which are far from the mean
+
         /*  cluster lines in each group by crossPointCluster -- expected 9,9  */
         Centroid verticalCent;
         Centroid horizontalCent;
@@ -461,7 +488,8 @@ public class ImageProcessor {
 
         // sort verticalIntersectionClusters's keys in order according to their point
         Map<Centroid, List<LineWithPoint>> sortedVerticalClusters = new TreeMap<>(new CentroidComparator());
-        Map<Centroid, List<LineWithPoint>> sortedHorizontalClusters = new TreeMap<>(new CentroidComparator());
+        // different order or left-right and top-bottom
+        Map<Centroid, List<LineWithPoint>> sortedHorizontalClusters = new TreeMap<>(new CentroidComparator2());
 
         sortedVerticalClusters.putAll(verticalIntersectionClusters);
         sortedHorizontalClusters.putAll(horizontalIntersectionClusters);
@@ -620,6 +648,15 @@ public class ImageProcessor {
         return arr;
     }
 
+    public static int getAvg(int[][] src){
+        int count = 0;
+        for(int i = 0; i < 8; i ++)
+            for(int j = 0; j < 8; j ++){
+                count += src[i][j];
+            }
+        return count/64;
+    }
+
     public static char[][] getPieceColor(int[][] currE, int[][] reE, int[][] currI, int[][] refI){
         char[][] pieces = new char[8][8];
 
@@ -627,7 +664,8 @@ public class ImageProcessor {
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++){
                 if (Occ[i][j] == 1){
-                    pieces[i][j] = getColor(currI[i][j], refI[i][j]);
+                    //pieces[i][j] = '1';
+                    pieces[i][j] = getColor(currI[i][j], refI[i][j],getAvg(refI));
                 }else
                     pieces[i][j] = CameraFragment.E;
             }
@@ -635,13 +673,22 @@ public class ImageProcessor {
         return pieces;
     }
 
-    public static char getColor(int currI, int refI) {
-        if (currI - refI > color_thres)
-            return CameraFragment.W;
-        else if (currI - refI < - color_thres)
-            return CameraFragment.B;
-        else
-            return CameraFragment.E;
+    public static char getColor(int currI, int refI, int sqr_thres) {
+        //int avgWithWhite = (refI + avgIntensityWhite)/2;
+        //int avgWithBlack = (refI + avgIntensityBlack)/2;
+
+        // white square
+        if (refI > sqr_thres) {
+            if (currI/(double)refI < 0.7)
+                return CameraFragment.B;
+            else
+                return CameraFragment.W;
+        }else { // black square
+                if(currI/(double)refI < 0.9)
+                    return CameraFragment.B;
+                else
+                    return CameraFragment.W;
+            }
 
     }
 
@@ -706,7 +753,7 @@ public class ImageProcessor {
         int tot = 0;
         for(int i = (int)start.y; i <= end.y; i++)
             for(int j = (int)start.x; j <= end.x; j++){
-                if(src.get(i,j)[0] > threshold)
+                if(src.get(j,i)[0] > threshold)
                     tot ++;
             }
 
@@ -807,29 +854,29 @@ public class ImageProcessor {
             }
         }
     }
-    // get average intensity of the grid
-    public void getIntensity(){
-        // 8 x 8 grids
-        Mat chessboardMat = new Mat(currentBitmap.getHeight(), currentBitmap.getWidth(), CvType.CV_8U);
-        Utils.bitmapToMat(currentBitmap, chessboardMat);
-        for(int i = 0; i < 8; i ++)
-            for(int j = 0; j < 8; j ++) {
-                Point start = new Point(blockSize * i + AOI_indent, blockSize * j + AOI_indent);
-                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * j + AOI_indent + AOI_height);
-                Mat block = chessboardMat.submat((int) start.x, (int) end.x, (int) start.y, (int) end.y);
-                double mu = Core.mean(block).val[0];
-                Imgproc.putText(chessboardMat, (int)mu + "", new Point(start.x,start.y), Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(150,255, 23));
+
+    private static class CentroidComparator2 implements Comparator<Centroid>
+    {
+        @Override
+        public int compare (Centroid o1, Centroid o2){
+            Point p1 = o1.point;
+            Point p2 = o2.point;
+            if (p1.y != p2.y) {
+                // compare x
+                if (p1.y > p2.y)
+                    return 1;
+                else
+                    return -1;
+            } else {
+                // compare y
+                if (p1.x == p2.x)
+                    return 0;
+                else if (p1.x > p2.x)
+                    return 1;
+                else
+                    return -1;
             }
-
-
-
-                //Imgproc.rectangle(chessboardMat, start, end, new Scalar(0, 255, 0, 255), 1);
-                // Log.d("CannyEdgeInAOI", "col: " + i + ", row: " + j + " Edge: " + countCannyEdgeInAOI(chessboardMat, start, end, binaryThres));
-        //Log.d("mMean", "mean of the block is : " + mu);
-        //Imgproc.putText(block, mu + "", new Point(40,40), Core.FONT_HERSHEY_SIMPLEX, 10.0, new Scalar(150,255, 23));
-        Utils.matToBitmap(chessboardMat, currentBitmap);
-        loadImageToImageView();
-
+        }
     }
 
 
@@ -869,9 +916,11 @@ public class ImageProcessor {
         Mat cannyEdges = Canny2(src);
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++) {
-                Point start = new Point(blockSize*i + AOI_indent, blockSize * j + AOI_indent);
-                Point end = new Point(blockSize*(i+1) - AOI_indent, blockSize * (j+1) - AOI_indent);
+                Point start = new Point(blockSize * i + AOI_indent, blockSize * j + AOI_indent);
+                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * (j+1) - AOI_indent);
                 edges[i][j] = countCannyEdgeInAOI(cannyEdges, start, end, 150);
+                //Mat cannyEdges = Canny2(src.submat(new Rect((int)start.x, (int)start.y, (int)end.x - (int)start.x, (int)end.y-(int)start.y)));
+                //edges[i][j] = countCannyEdgeInAOI(cannyEdges, new Point(0,0), new Point((int)end.x - (int)start.x,(int)end.y-(int)start.y), 150);
             }
         return edges;
     }
@@ -886,6 +935,16 @@ public class ImageProcessor {
                         5, new Scalar(0, 255, 0, 255), 1);
             }
         return dest;
+    }
+
+    public static Mat drawLines(Mat src, Mat lines){
+        Scalar color = new Scalar(255,0,0);
+        for (int i = 0; i < lines.rows(); i++) {
+            Imgproc.line(src, new Point(lines.get(i,0)[0], lines.get(i,0)[1]), new Point(lines.get(i,0)[2], lines.get(i,0)[3]), color, 1);
+
+            //outputStreamWriter.write(i + " " + line.getTheta() + " " + line.getRtho() + "\n");
+        }
+        return src;
     }
 
 
