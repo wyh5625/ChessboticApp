@@ -1,7 +1,6 @@
 package com.example.ChessPlayerApp.chessboardcamera;
 
 import android.graphics.Bitmap;
-import android.graphics.Camera;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -14,25 +13,23 @@ import com.example.ChessPlayerApp.chessboardcamera.KmeanCluster.Line;
 import com.example.ChessPlayerApp.chessboardcamera.KmeanCluster.LineWithPoint;
 import com.example.ChessPlayerApp.chessboardcamera.KmeanCluster.Match;
 import com.example.ChessPlayerApp.chessboardcamera.KmeanCluster.PointDistance;
-import com.example.ChessPlayerApp.chessboardcamera.KmeanCluster.ThetaDistance;
 import com.example.ChessPlayerApp.robot_arm.Recognition.CameraFragment;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.core.TermCriteria;
 import org.opencv.imgproc.Imgproc;
 
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -60,11 +57,11 @@ public class ImageProcessor {
     public static int cannyEdgeThres1 = 40;
     public static int cannyEdgeThres2 = 60;
 
-    public static int houghLinesThres = 70;
+    public static int houghLinesThres = 80;
     public static int houghLinesMinLineLength = 200;
     public static int houghLinesMaxLineGap = 100;
     public static int binaryThres = 120;
-    public static int chessboardDetectThres = 5;
+    public static int chessboardDetectThres = 3;
 
 
     private Bitmap currentBitmap;
@@ -75,7 +72,7 @@ public class ImageProcessor {
     static Mat chessboardMatchTransform;
 
     public static final int blockSize = 50;
-    public static final int AOI_indent = 4;
+    public static final int AOI_indent = 10;
     public static final int AOI_height = 80;
 
     public static final int AOI_height_origin = 600;
@@ -83,7 +80,8 @@ public class ImageProcessor {
     // AOI threshold = min number of canny edge
     public static final int AOI_canny_thres = 80;
 
-    public static final int occpancy_thres = 40;
+    public static final int occpancy_change_thres = 40;
+    public static final int occpancy_thres = 10;
     public static final int color_thres = 100;
 
     static Point[][] detectedChessboardModel;
@@ -621,19 +619,28 @@ public class ImageProcessor {
         return output;
     }
 
-    public static int[][] getOccpancy(int[][] currE, int[][] reE){
+    public static int[][] getOccupancy(int[][] currE, int[][] reE){
         int[][] Occ = new int[8][8];
 
 
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++){
-                if (Math.abs(currE[i][j] - reE[i][j]) > occpancy_thres)
+                if (currE[i][j] > occpancy_thres)
                     Occ[i][j] = 1;
                 else
                     Occ[i][j] = 0;
             }
 
         return Occ;
+    }
+
+    public static int getOcc(int curr_e){
+
+        if (curr_e > occpancy_thres)
+            return 1;
+        else
+            return 0;
+
     }
 
     public static char[][] defaultFill(char[][] arr, char val){
@@ -657,39 +664,106 @@ public class ImageProcessor {
         return count/64;
     }
 
-    public static char[][] getPieceColor(int[][] currE, int[][] reE, int[][] currI, int[][] refI){
+    public static char[][] getPieceColor(int[][] currE, int[][] refE, int[][] curr_PieceIntensity, int[][] last_PieceIntensity, int[][] curr_intenDev, char[][] lastPcl){
         char[][] pieces = new char[8][8];
+        //int[][] pieceOcc = getOccupancy(currE, reE);
 
-        int[][] Occ = getOccpancy(currE, reE);
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++){
-                if (Occ[i][j] == 1){
+                if (currE[i][j] - refE[i][j] > occpancy_thres || curr_intenDev[i][j] > 7){
+                    //pieces[i][j] = getColor(i, j, currI, refI, lastPcl);
+                    if (curr_PieceIntensity[i][j] < 25)
+                        pieces[i][j] = CameraFragment.B;
+                    else
+                        pieces[i][j] = CameraFragment.W;
                     //pieces[i][j] = '1';
-                    pieces[i][j] = getColor(currI[i][j], refI[i][j],getAvg(refI));
-                }else
+                }else if (currE[i][j] - refE[i][j] < -occpancy_thres){
                     pieces[i][j] = CameraFragment.E;
+                } else{
+                    if (lastPcl[i][j] != CameraFragment.E && Math.abs(last_PieceIntensity[i][j] - curr_PieceIntensity[i][j]) > 20){
+                        // capture
+                        if (curr_PieceIntensity[i][j] - last_PieceIntensity[i][j] > 0)
+                            pieces[i][j] = CameraFragment.W;
+                        else
+                            pieces[i][j] = CameraFragment.B;
+                    }else
+                        pieces[i][j] = lastPcl[i][j];
+                }
+
             }
+
 
         return pieces;
     }
 
-    public static char getColor(int currI, int refI, int sqr_thres) {
+
+
+    public static char getColor(int i, int j, int[][] currI, int[][] refI, char[][] lastPcl) {
         //int avgWithWhite = (refI + avgIntensityWhite)/2;
         //int avgWithBlack = (refI + avgIntensityBlack)/2;
 
-        // white square
-        if (refI > sqr_thres) {
-            if (currI/(double)refI < 0.7)
-                return CameraFragment.B;
-            else
-                return CameraFragment.W;
-        }else { // black square
-                if(currI/(double)refI < 0.9)
-                    return CameraFragment.B;
-                else
-                    return CameraFragment.W;
-            }
+        // the color of the square, assuming top left cornor square is white, so if i + j is even -> white, odd -> black
 
+        // need to consider adaptive threshold of color: intensity of (black on white, black on black, white on white and white on black)
+        int isOdd = (i + j) % 2;
+
+        double thres_e = 0;
+        double thres_w = 0;
+        double thres_b = 0;
+        double totalWeight_e = 0;
+        double totalWeight_w = 0;
+        double totalWeight_b = 0;
+
+
+        for(int r = 0; r < 8; r ++)
+            for(int c = 0; c < 8; c ++){
+                if(r == i && c == j)
+                    break;
+                if((r + c)%2 == isOdd){
+                    double distance = getDist(i, j, r, c);
+                    // empty thres
+
+                    if (lastPcl[r][c] == CameraFragment.E){
+                        thres_e += refI[r][c]/distance;
+                        totalWeight_e += 1/distance;
+                    }else if (lastPcl[r][c] == CameraFragment.W){ // white thres
+                        thres_w += refI[r][c]/distance;
+                        totalWeight_w += 1/distance;
+                    }else{
+                        thres_b += refI[r][c]/distance;
+                        totalWeight_b += 1/distance;
+                    }
+                }
+            }
+        thres_e = thres_e/totalWeight_e;
+        thres_w = thres_w/totalWeight_w;
+        thres_b = thres_b/totalWeight_b;
+
+        Log.d("GetColor", "rI: " + i + "," + j + "; "+ currI[i][j]);
+
+        Log.d("GetColor", "rE: " + thres_e);
+        Log.d("GetColor", "rW: " + thres_w);
+        Log.d("GetColor", "rB: " + thres_b);
+
+        double disToE = Math.abs(currI[i][j] - thres_e);
+        double disToW = Math.abs(currI[i][j] - thres_w);
+        double disToB = Math.abs(currI[i][j] - thres_b);
+
+
+        double minDist = Math.min(Math.min(disToE, disToW), disToB);
+        if (minDist == disToE)
+            return CameraFragment.E;
+        else if (minDist == disToB)
+            return CameraFragment.B;
+        else
+            return CameraFragment.W;
+
+
+
+    }
+
+    public static double getDist(int i, int j, int row, int col){
+        return Math.sqrt(Math.pow(i - row, 2) + Math.pow(j - col, 2));
     }
 
     public void showAOI_Origin(){
@@ -901,13 +975,127 @@ public class ImageProcessor {
             }
 
 
-
         //Imgproc.rectangle(chessboardMat, start, end, new Scalar(0, 255, 0, 255), 1);
         // Log.d("CannyEdgeInAOI", "col: " + i + ", row: " + j + " Edge: " + countCannyEdgeInAOI(chessboardMat, start, end, binaryThres));
         //Log.d("mMean", "mean of the block is : " + mu);
         //Imgproc.putText(block, mu + "", new Point(40,40), Core.FONT_HERSHEY_SIMPLEX, 10.0, new Scalar(150,255, 23));
         return intensities;
 
+    }
+
+    // get average intensity of the grid
+    public static int[][] getPieceIntensity(Mat grayMat){
+        // 8 x 8 grids
+
+        int[][] pieceIntensity = new int[8][8];
+
+        //Mat chessboardMat = new Mat(currentBitmap.getHeight(), currentBitmap.getWidth(), CvType.CV_8U);
+        //Utils.bitmapToMat(currentBitmap, chessboardMat);
+        //String re = "The double table inside: \n";
+        for(int i = 0; i < 8; i ++) {
+            for (int j = 0; j < 8; j++) {
+                Point start = new Point(blockSize * i + AOI_indent, blockSize * j + AOI_indent);
+                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * (j + 1) - AOI_indent);
+                Mat block = grayMat.submat((int) start.x, (int) end.x, (int) start.y, (int) end.y);
+                //double mu = Core.mean(block).val[0];
+                MatOfDouble mStdDev = new MatOfDouble();
+                Core.meanStdDev(block, new MatOfDouble(), mStdDev);
+
+                //TermCriteria criteria = new TermCriteria(TermCriteria.MAX_ITER, 10, 1.0);
+                TermCriteria criteria = new TermCriteria(TermCriteria.MAX_ITER, 100, 0.01);
+                Mat clusteredIntensities = new Mat();
+                Mat centers = new Mat();
+
+                Mat samples = new Mat(block.rows() * block.cols(), 3, CvType.CV_32F);
+                for( int y = 0; y < block.rows(); y++ ) {
+                    for( int x = 0; x < block.cols(); x++ ) {
+                        for( int z = 0; z < 3; z++) {
+                            samples.put(x + y*block.cols(), z, block.get(y,x)[z]);
+                        }
+                    }
+                    }
+                /*
+                block = block.clone();
+                block = block.reshape(1, 1);
+                Mat block32f = new Mat();
+                block.convertTo(block32f, CvType.CV_32F);
+
+                 */
+                Core.kmeans(samples, 2, clusteredIntensities, criteria, 10, Core.KMEANS_PP_CENTERS, centers);
+                //Imgproc.putText(chessboardMat, (int)mu + "", new Point(start.x,start.y), Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(150,255, 23));
+                //int label1 = (int) clusteredIntensities.get(0, 0)[0];
+                //int label2 = (int) clusteredIntensities.get(1, 0)[0];
+                double mu1 = (centers.get(0, 0)[0] + centers.get(0, 1)[0] + centers.get(0, 2)[0])/3;
+                double mu2 = (centers.get(1, 0)[0] + centers.get(1, 1)[0] + centers.get(1, 2)[0])/3;
+
+
+                if ((i + j) % 2 == 0) // white square, relative intensity to white square
+                    pieceIntensity[i][j] = (int)Math.min(mu1, mu2);
+
+                else {
+                    if (mu1 > 50 || mu2 > 50)
+                        pieceIntensity[i][j] = (int)Math.max(mu1, mu2);
+                    else
+                        pieceIntensity[i][j] = (int)Math.min(mu1, mu2);
+                }
+
+
+                //re += mu1 + "," + mu2 + " ";
+
+
+
+            }
+            //re += "\n";
+        }
+        //Log.d("PCL", re);
+
+
+
+        //Imgproc.rectangle(chessboardMat, start, end, new Scalar(0, 255, 0, 255), 1);
+        // Log.d("CannyEdgeInAOI", "col: " + i + ", row: " + j + " Edge: " + countCannyEdgeInAOI(chessboardMat, start, end, binaryThres));
+        //Log.d("mMean", "mean of the block is : " + mu);
+        //Imgproc.putText(block, mu + "", new Point(40,40), Core.FONT_HERSHEY_SIMPLEX, 10.0, new Scalar(150,255, 23));
+        return pieceIntensity;
+
+    }
+
+    // get average intensity of the grid
+    public static int[][] getIntensityDev(Mat grayMat){
+        // 8 x 8 grids
+
+        int[][] stdDev = new int[8][8];
+
+        //Mat chessboardMat = new Mat(currentBitmap.getHeight(), currentBitmap.getWidth(), CvType.CV_8U);
+        //Utils.bitmapToMat(currentBitmap, chessboardMat);
+        for(int i = 0; i < 8; i ++)
+            for(int j = 0; j < 8; j ++) {
+                Point start = new Point(blockSize * i + AOI_indent, blockSize * j + AOI_indent);
+                Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * (j+1) - AOI_indent);
+                Mat block = grayMat.submat((int) start.x, (int) end.x, (int) start.y, (int) end.y);
+                //double mu = Core.mean(block).val[0];
+                MatOfDouble mStdDev = new MatOfDouble();
+                Core.meanStdDev(block, new MatOfDouble(), mStdDev);
+
+                stdDev[i][j] = (int)mStdDev.toArray()[0];
+
+            }
+
+
+        return stdDev;
+
+    }
+
+    public static int[][] Occ2(int[][] edges, int[][] intenDev){
+        int[][] occ = new int[8][8];
+        for(int i = 0; i < 8; i ++)
+            for(int j = 0; j < 8; j ++) {
+                if (edges[i][j] > 100 && intenDev[i][j] > 15)
+                    occ[i][j] = 1;
+                else{
+                    occ[i][j] = 0;
+                }
+            }
+        return occ;
     }
 
     // get number of edges on each block

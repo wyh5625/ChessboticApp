@@ -29,7 +29,7 @@ import java.util.Random;
 
 public class TheEngine {
     public static boolean gameStarted = false;
-    static boolean robotArmControl = true;
+    static boolean robotArmControl = false;
     static int wKingNeverMove, wKRNeverMove,wQRNeverMove,
             bKingNeverMove,bKRNeverMove,bQRNeverMove;
     public static boolean whiteTurn, stopNow;
@@ -285,7 +285,7 @@ public class TheEngine {
             makeMove(newGameMove, false);
             //Log.d("makeMove", newGameMove);
             //Log.d("makeMove", printBoard());
-            int boardValue = rating(movesSize,wturn);
+            int boardValue = rating();
             // Debugging only //Log.i("WJH", "Made movePiece, rating = "+newGameMove + String.valueOf(boardValue));// Debugging only //
 
             undoMove(newGameMove);
@@ -320,11 +320,11 @@ public class TheEngine {
         bestMove.value = Integer.MIN_VALUE;
         bestMove.move = "none";
         //whiteTurn = true;
-        String theMoves = allMoves(whiteTurn);
+        String theMoves = allMoves(true);
         int theseMovesSize = theMoves.length()/7;
 
         if (depth < 1 || theseMovesSize == 0){  // terminal state
-            bestMove.value = rating(theseMovesSize,whiteTurn);
+            bestMove.value = rating();
         }else{
             MoveValue currentMove;
             for (int i = 0; i < theseMovesSize; i++) {
@@ -357,11 +357,11 @@ public class TheEngine {
         bestMove.value = Integer.MAX_VALUE;
         bestMove.move = "none";
 
-        String theMoves = allMoves(!whiteTurn);
+        String theMoves = allMoves(false);
         int theseMovesSize = theMoves.length()/7;
 
         if (depth < 1 || theseMovesSize == 0){  // terminal state
-            bestMove.value = rating(theseMovesSize,whiteTurn);
+            bestMove.value = rating();
         }else{
             MoveValue currentMove;
             for (int i = 0; i < theseMovesSize; i++) {
@@ -386,8 +386,9 @@ public class TheEngine {
         return bestMove;
     }
 
-    public static int rating(int list, boolean wTurn) {
+    public static int rating() {
         int counter=0;
+        /*
         if (wTurn){
             //counter+=rateMoveablitly(list);
             counter+=rateMaterial();
@@ -395,9 +396,13 @@ public class TheEngine {
 
         } else {    // the default evaluation is for white's advantage
             //counter-=rateMoveablitly(list);
-            counter-=rateMaterial();
-            counter-=ratePositional();
+            counter+=rateMaterial();
+            counter+=ratePositional();
         }
+
+         */
+        counter+=rateMaterial();
+        counter+=ratePositional();
 
         // Debugging only //Log.i("WJH", "Total Counter="+String.valueOf(counter));
         return counter;

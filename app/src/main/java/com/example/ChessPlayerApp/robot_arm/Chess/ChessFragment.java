@@ -53,7 +53,7 @@ public class ChessFragment extends Fragment implements View.OnClickListener{
 
     private Button resetButton;
 
-    static int engineStrength = 1;
+    static int engineStrength = 4;
     public static boolean wTurn;
     boolean firstClick;
     String tryMove;

@@ -1,14 +1,14 @@
 Executable : C:\Users\wyh56\AppData\Local\Android\Sdk\ndk-bundle\ndk-build.cmd
 arguments : 
 NDK_PROJECT_PATH=null
-APP_BUILD_SCRIPT=C:\Users\wyh56\AndroidStudioProjects\StartBLE\app\src\main\jni\Android.mk
-NDK_APPLICATION_MK=C:\Users\wyh56\AndroidStudioProjects\StartBLE\app\src\main\jni\Application.mk
+APP_BUILD_SCRIPT=C:\Users\wyh56\AndroidStudioProjects\ChessPlayerApp\app\src\main\jni\Android.mk
+NDK_APPLICATION_MK=C:\Users\wyh56\AndroidStudioProjects\ChessPlayerApp\app\src\main\jni\Application.mk
 APP_ABI=x86
 NDK_ALL_ABIS=x86
 NDK_DEBUG=0
 APP_PLATFORM=android-21
-NDK_OUT=C:/Users/wyh56/AndroidStudioProjects/StartBLE/app/build/intermediates/ndkBuild/release/obj
-NDK_LIBS_OUT=C:\Users\wyh56\AndroidStudioProjects\StartBLE\app\build\intermediates\ndkBuild\release\lib
+NDK_OUT=C:/Users/wyh56/AndroidStudioProjects/ChessPlayerApp/app/build/intermediates/ndkBuild/release/obj
+NDK_LIBS_OUT=C:\Users\wyh56\AndroidStudioProjects\ChessPlayerApp\app\build\intermediates\ndkBuild\release\lib
 APP_CFLAGS+=-DTEST_C_FLAG1
 APP_CFLAGS+=-DTEST_C_FLAG2
 APP_CPPFLAGS+=-DTEST_CPP_FLAG2

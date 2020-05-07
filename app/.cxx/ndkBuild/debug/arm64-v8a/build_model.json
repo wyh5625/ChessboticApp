@@ -1,19 +1,19 @@
 {
   "variant": {
     "module": {
-      "rootBuildGradleFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE",
+      "rootBuildGradleFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp",
       "sdkFolder": "C:\\Users\\wyh56\\AppData\\Local\\Android\\Sdk",
       "isNativeCompilerSettingsCacheEnabled": false,
       "isBuildOnlyTargetAbiEnabled": true,
       "ideBuildTargetAbi": "arm64-v8a,armeabi-v7a,armeabi",
       "splitsAbiFilterSet": [],
-      "intermediatesFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates",
+      "intermediatesFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\build\\intermediates",
       "gradleModulePathName": ":app",
-      "moduleRootFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app",
-      "makeFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\src\\main\\jni\\Android.mk",
+      "moduleRootFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app",
+      "makeFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\src\\main\\jni\\Android.mk",
       "buildSystem": "NDK_BUILD",
-      "compilerSettingsCacheFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\.cxx",
-      "cxxFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx",
+      "compilerSettingsCacheFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\.cxx",
+      "cxxFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx",
       "ndkFolder": "C:\\Users\\wyh56\\AppData\\Local\\Android\\Sdk\\ndk-bundle",
       "ndkVersion": "19.0.5232133",
       "ndkSupportedAbiList": [
@@ -42,10 +42,10 @@
       "-DTEST_CPP_FLAG2"
     ],
     "variantName": "debug",
-    "soFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\lib",
-    "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local",
-    "jsonFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug",
-    "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\cxx\\debug",
+    "soFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\build\\intermediates\\ndkBuild\\debug\\lib",
+    "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local",
+    "jsonFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug",
+    "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\cxx\\debug",
     "isDebuggableEnabled": true,
     "validAbiList": [
       "ARM64_V8A",
@@ -55,13 +55,13 @@
   },
   "abi": "ARM64_V8A",
   "abiPlatformVersion": 21,
-  "cxxBuildFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a",
-  "jsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\android_gradle_build.json",
-  "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\cxx\\debug\\arm64-v8a",
-  "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\arm64-v8a",
-  "buildCommandFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\build_command.txt",
-  "buildOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\build_output.txt",
-  "modelOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\build_model.json",
-  "jsonGenerationLoggingRecordFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\json_generation_record.json",
-  "compileCommandsJsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\StartBLE\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\compile_commands.json"
+  "cxxBuildFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a",
+  "jsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\android_gradle_build.json",
+  "gradleBuildOutputFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\cxx\\debug\\arm64-v8a",
+  "objFolder": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\build\\intermediates\\ndkBuild\\debug\\obj\\local\\arm64-v8a",
+  "buildCommandFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\build_command.txt",
+  "buildOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\build_output.txt",
+  "modelOutputFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\build_model.json",
+  "jsonGenerationLoggingRecordFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\json_generation_record.json",
+  "compileCommandsJsonFile": "C:\\Users\\wyh56\\AndroidStudioProjects\\ChessPlayerApp\\app\\.cxx\\ndkBuild\\debug\\arm64-v8a\\compile_commands.json"
 }

@@ -23,7 +23,7 @@ public class RoboticArm implements Gripper {
 
     // static value
     public static double gripperFloatHeight = 60;
-    public static double gripperGrabHeight = 0;
+    public static double gripperGrabHeight = -10;
 
     // gripper value
     public static double openAmount = 45;

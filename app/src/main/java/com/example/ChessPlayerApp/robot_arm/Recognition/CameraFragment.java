@@ -24,9 +24,7 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.Arrays;
@@ -42,6 +40,7 @@ import static com.example.ChessPlayerApp.robot_arm.Chess.TheUserInterface.drawBo
 
 
 public class CameraFragment extends Fragment implements  CameraBridgeViewBase.CvCameraViewListener2{
+
 
     enum Mode {
         Normal,
@@ -79,8 +78,15 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     boolean calibrated = false;
 
 
-    public static int[][] cali_Intensities = new int[8][8];
-    public static int[][] cali_Edges = new int[8][8];
+    public static int[][] curr_Intensity_raw = new int[8][8];
+    public static int[][] curr_Edges_raw = new int[8][8];
+    public static int[][] curr_PieceIntensity_raw = new int[8][8];
+    public static int[][] curr_IntensityDev_raw = new int[8][8];
+
+    public static int[][] last_PieceIntensity_raw = new int[8][8];
+
+    public static int[][] last_Intensity = new int[8][8];
+    public static int[][] last_Edges = new int[8][8];
 
     public static Mat ref_AOI = null;
     public static Mat AOI = null;
@@ -106,8 +112,12 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
 
     // Filter
     AverageFIlter edgeFilter = new AverageFIlter(5);
-    AverageFIlter intenFilter = new AverageFIlter(5);
+    AverageFIlter intensityFilter = new AverageFIlter(5);
+    AverageFIlter pieceIntenFilter = new AverageFIlter(5);
+    AverageFIlter intenDevFilter = new AverageFIlter(5);
 
+
+    public static int rotate_angle; // 0 = 0, 1 = 90, 2 = 180, 3 = -90
 
 
     public static CameraFragment getInstance(){
@@ -165,14 +175,51 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             @Override
             public void onClick(View v) {
                 if(currEdges != null && currIntensities != null){
-                    cali_Edges = currEdges;
-                    cali_Intensities = currIntensities;
+                    copyIntArr(currEdges, last_Edges);
+                    copyIntArr(currIntensities, last_Intensity);
+                    copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
                     ref_AOI = AOI;
-                    calibrated = true;
-                }
 
-                if (TheEngine.gameStarted)
-                    updatePcl(lastPcl, TheEngine.theBoard);
+                    // edited
+                    // find the rotate angle, only check when the game is not started yet
+                    if (!calibrated){
+                        calibrated = true;
+                        int bottomRow = 0;
+                        int topRow = 0;
+                        int leftColumn = 0;
+                        int rightColumn = 0;
+                        // bottom and top
+                        for (int j = 0; j < 8; j ++){
+                            bottomRow += curr_Intensity_raw[6][j] + curr_Intensity_raw[7][j];
+                            topRow += curr_Intensity_raw[0][j] + curr_Intensity_raw[1][j];
+                        }
+                        for (int i = 0; i < 8; i ++){
+                            leftColumn += curr_Intensity_raw[i][0] + curr_Intensity_raw[i][1];
+                            rightColumn += curr_Intensity_raw[i][6] + curr_Intensity_raw[i][7];
+                        }
+
+                        int dark = Math.min(Math.min(Math.min(bottomRow, topRow), leftColumn), rightColumn);
+                        if (bottomRow == dark){
+                            rotate_angle = 2;
+                        }else if (topRow == dark){
+                            rotate_angle = 0;
+                        }else if (dark == leftColumn){
+                            rotate_angle = 1;
+                        }else if (dark == rightColumn){
+                            rotate_angle = 3;
+                        }
+
+                        //rotateArray(last_Intensity, rotate_angle);
+                        //rotateArray(last_Edges, rotate_angle);
+                    }
+                    Log.d("CaliAngle", "the rotate angle is: " + rotate_angle);
+
+                }
+                lastPcl = new char[8][8];
+                updatePcl(lastPcl, TheEngine.theBoard);
+                //if (TheEngine.gameStarted)
+                printPcl(lastPcl);
+
 
                 /*
                 if(!firstClicked_cali){
@@ -199,7 +246,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 // if game start, white turn,
                 if (TheEngine.whiteTurn && TheEngine.gameStarted){
                     // check pcl
-                    //copyPcl(lastPcl, currPcl);
+                    //copyCharArr(lastPcl, currPcl);
                     //currPcl[6][7] = '*';
                     //currPcl[5][7] = 'w';
                     String myMove = MoveCalculator.getMove(lastPcl, currPcl);
@@ -208,7 +255,12 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                     Log.d("MyMove", "move: " + myMove);
                     if (myMove != "" && validMove(myMove)){
                         String query = terminal("myMove,"+myMove);
-                        copyPcl(currPcl, lastPcl);
+
+                        copyCharArr(currPcl, lastPcl);
+                        copyIntArr(currEdges, last_Edges);
+                        copyIntArr(currIntensities, last_Intensity);
+                        copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
+
                         AIWork();
                     }else{
                         Log.d("MyMove", "Not a valid move, please try again.");
@@ -221,7 +273,44 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         return root;
     }
 
-    public void copyPcl(char[][] from, char[][] to){
+
+    public int[][] rotateArray(int[][] arr, int type){
+        int[][] arr_copy = new int[8][8];
+        copyIntArr(arr, arr_copy);
+
+        switch (type){
+            case 1: // clock wise 90
+                for(int i = 0; i < 8; i ++)
+                    for(int j = 0; j < 8; j ++){
+                        arr_copy[j][7 - i] = arr[i][j];
+                    }
+                break;
+            case 2:
+                for(int i = 0; i < 8; i ++)
+                    for(int j = 0; j < 8; j ++){
+                        arr_copy[7 - i][7 - j] = arr[i][j];
+                    }
+                break;
+            case 3:
+                for(int i = 0; i < 8; i ++)
+                    for(int j = 0; j < 8; j ++){
+                        arr_copy[7 - i][i] = arr[i][j];
+                    }
+                break;
+        }
+
+        return arr_copy;
+    }
+
+
+    public void copyCharArr(char[][] from, char[][] to){
+        for(int i = 0; i < 8; i ++)
+            for(int j = 0; j < 8; j ++){
+                to[i][j] = from[i][j];
+            }
+    }
+
+    public void copyIntArr(int[][] from, int[][] to){
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++){
                 to[i][j] = from[i][j];
@@ -248,13 +337,13 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             TheEngine.gameStarted = false;
         } else {
             getNextMove();
-            ChessFragment.wTurn = !ChessFragment.wTurn;
 
         }
+        /*wait for the update on the chess board*/
 
         // update PCL from camera or theEngine?
-        updatePcl(lastPcl, TheEngine.theBoard);
-
+        //updatePcl(lastPcl, TheEngine.theBoard);
+        //printPcl(lastPcl);
     }
 
     void updatePcl(char[][] thePcl, char[] theBoard){
@@ -291,6 +380,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         // get intensifies and edges
         if (pointsAndTranf.points != null){
             AOI = ImageProcessor.tranformInterestArea(grayMat, pointsAndTranf.tranf);
+            Mat AOI_color = ImageProcessor.tranformInterestArea(src, pointsAndTranf.tranf);
             //Mat diff_AOI = AOI;
             /*
             if (ref_AOI != null) {
@@ -300,32 +390,52 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
 
              */
 
-            intenFilter.update(ImageProcessor.getIntensity(AOI));
-            edgeFilter.update(ImageProcessor.getEdges(AOI));
 
-            currIntensities = intenFilter.getAvg();
-            currEdges = edgeFilter.getAvg();
+            edgeFilter.update(ImageProcessor.getEdges(AOI));
+            intensityFilter.update(ImageProcessor.getIntensity(AOI));
+            pieceIntenFilter.update(ImageProcessor.getPieceIntensity(AOI_color));
+            intenDevFilter.update(ImageProcessor.getIntensityDev(AOI));
+
+
+
+
+            curr_Intensity_raw = intensityFilter.getAvg();
+            curr_Edges_raw = edgeFilter.getAvg();
+            curr_PieceIntensity_raw = pieceIntenFilter.getAvg();
+            curr_IntensityDev_raw = intenDevFilter.getAvg();
+
+
+
+
+            currIntensities = curr_Intensity_raw;
+                    //rotateArray(curr_Intensity_raw, rotate_angle);
+            currEdges = curr_Edges_raw;
+            //rotateArray(curr_Edges_raw, rotate_angle);
+
+            //printPcl(lastPcl);
+            printIntArr(currEdges);
+            printIntArr(currIntensities);
 
             src = ImageProcessor.drawPoint(src, pointsAndTranf.points);
             //AOI = ImageProcessor.Canny2(AOI);
             //AOI.copyTo(src);
-            //cali_Intensities = intensities;
-            //cali_Edges = edges;
+            //last_Intensity = intensities;
+            //last_Edges = edges;
             if (calibrated){
-                currPcl = ImageProcessor.getPieceColor(currEdges, cali_Edges, currIntensities, cali_Intensities);
+                currPcl = ImageProcessor.getPieceColor(currEdges, last_Edges, curr_PieceIntensity_raw, last_PieceIntensity_raw, curr_IntensityDev_raw, lastPcl);
                 printPcl(currPcl);
                 // Show currPcl on mat
                 for(int i = 0; i < 8; i ++)
                     for(int j = 0; j < 8; j ++){
-                        Imgproc.putText(src, ""+ currPcl[i][j], pointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        Imgproc.putText(src, " "+ currPcl[i][j], pointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Imgproc.putText(src, ""+ currIntensities[i][j], pointsAndTranf.points[i][j+1], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Log.d("Info", " E: "+ currEdges[i][j] + ", I: " + currIntensities[i][j]);
                     }
-                if (whiteTurn){
+                if (ChessFragment.wTurn){
                     // only calibrated can you do:
                     if (TheEngine.gameStarted){
                         // check pcl
-                        //copyPcl(lastPcl, currPcl);
+                        //copyCharArr(lastPcl, currPcl);
                         //currPcl[6][7] = '*';
                         //currPcl[5][7] = 'w';
                         String myMove = MoveCalculator.getMove(lastPcl, currPcl);
@@ -334,14 +444,33 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                         Log.d("MyMove", "move: " + myMove);
                         if (myMove != "" && validMove(myMove)){
                             String query = terminal("myMove,"+myMove);
-                            copyPcl(currPcl, lastPcl);
+
+                            copyCharArr(currPcl, lastPcl);
+
+                            copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
+                            copyIntArr(currEdges, last_Edges);
+                            copyIntArr(currIntensities, last_Intensity);
+
+
                             AIWork();
+
                         }
                     }
-                    //currPcl = ImageProcessor.getPieceColor(currEdges, cali_Edges, currIntensities, cali_Intensities);
+                    //currPcl = ImageProcessor.getPieceColor(currEdges, last_Edges, currIntensities, last_Intensity);
                     // calculate its move
-                }else if(!whiteTurn){
-                    // no need to update lastPcl, since it has been updated from theBoard in TheEngine.java
+                }else if(!ChessFragment.wTurn){
+                    if (matchPclwithTheBoard(currPcl, TheEngine.theBoard)){
+                        copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
+                        copyIntArr(currEdges, last_Edges);
+                        copyIntArr(currIntensities, last_Intensity);
+                        copyCharArr(currPcl, lastPcl);
+
+                        ChessFragment.wTurn = !ChessFragment.wTurn;
+
+                        Log.d("MatchBoard", "AI Act the board updated");
+                    }
+                    // check whether currPcl match theBoard,
+
                 }
 
             }
@@ -354,6 +483,26 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
 
 
         return src;
+    }
+
+    public boolean matchPclwithTheBoard(char[][] thePcl, char[] theBoard){
+        //boolean matched = false;
+        for(int k = 0; k < 64; k ++) {
+            int i = 7 - k / 8;
+            int j = k % 8;
+
+            if(theBoard[k] == '*')
+                if(thePcl[i][j] != E)
+                    return false;
+            else if(Character.isLowerCase(theBoard[k]))
+                if (thePcl[i][j] != B)
+                    return false;
+            else
+                if (thePcl[i][j] != W)
+                    return false;
+        }
+        return true;
+
     }
 
     public Mat normalize(Mat diffMat){
@@ -375,6 +524,30 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         for(int i = 0; i < 8; i ++) {
             for (int j = 0; j < 8; j++) {
                 re += pcl[i][j];
+            }
+            re += "\n";
+        }
+        Log.d("PCL", re);
+
+    }
+
+    public void printDoubleArr(double[][] arr){
+        String re = "The double table: \n";
+        for(int i = 0; i < 8; i ++) {
+            for (int j = 0; j < 8; j++) {
+                re += arr[i][j] + " ";
+            }
+            re += "\n";
+        }
+        Log.d("PCL", re);
+
+    }
+
+    public void printIntArr(int[][] arr){
+        String re = "The Int table: \n";
+        for(int i = 0; i < 8; i ++) {
+            for (int j = 0; j < 8; j++) {
+                re += arr[i][j] + " ";
             }
             re += "\n";
         }
