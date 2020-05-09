@@ -29,7 +29,7 @@ import java.util.Random;
 
 public class TheEngine {
     public static boolean gameStarted = false;
-    static boolean robotArmControl = false;
+    static boolean robotArmControl = true;
     static int wKingNeverMove, wKRNeverMove,wQRNeverMove,
             bKingNeverMove,bKRNeverMove,bQRNeverMove;
     public static boolean whiteTurn, stopNow;

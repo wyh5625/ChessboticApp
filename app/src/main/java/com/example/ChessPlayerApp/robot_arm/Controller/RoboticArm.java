@@ -16,18 +16,20 @@ public class RoboticArm implements Gripper {
     private double distanecToBoard;
 
     // gripperOffset
-    private double gripperOffset = 36;
+    private double gripperOffset = 40;
 
     // Bin position (beyond chessboard)
     private String bin = "k8";
 
     // static value
     public static double gripperFloatHeight = 60;
-    public static double gripperGrabHeight = -10;
+    public static double gripperGrabHeight = -15;
+    public static double gripperGrabHeight2 = 0;
+    public static double gripperFloatOffset = 15;
 
     // gripper value
-    public static double openAmount = 45;
-    public static double closeAmount = 10;
+    public static double openAmount = 40;
+    public static double closeAmount = 0;
 
     public RoboticArm(BluetoothLeService bls, double block_size, double distanceToBoard){
         this.myBluetooth = bls;
@@ -143,18 +145,22 @@ public class RoboticArm implements Gripper {
         double to_x = a1_x + ('a' - to.charAt(0))*block_size;
         double to_y = a1_y + ('1' - to.charAt(1))*block_size;
 
-        moveTo(0,180+gripperOffset,180);
+        //moveTo(0,180+gripperOffset,180);
         moveTo(from_x, from_y, gripperFloatHeight);
         openGripper(openAmount);
+
+        //moveTo(from_x, from_y + gripperFloatOffset, gripperGrabHeight);
         moveTo(from_x, from_y, gripperGrabHeight);
         closeGripper(closeAmount);
+
         moveTo(from_x, from_y, gripperFloatHeight);
 
         moveTo(to_x, to_y, gripperFloatHeight);
         moveTo(to_x, to_y, gripperGrabHeight);
         openGripper(openAmount);
+
         moveTo(to_x, to_y, gripperFloatHeight);
-        moveTo(0,180+gripperOffset,180);
+        moveTo(0,100+gripperOffset,180);
 
     }
     // convert position index to letter format eg. 21 -> c6

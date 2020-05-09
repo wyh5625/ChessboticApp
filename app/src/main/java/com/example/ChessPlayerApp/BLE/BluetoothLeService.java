@@ -191,7 +191,7 @@ public class BluetoothLeService extends Service {
     public void startTimerTask(){
         timerTask = new MyTimerTask();
         timer = new Timer(true);
-        timer.scheduleAtFixedRate(timerTask, 0, 300);
+        timer.scheduleAtFixedRate(timerTask, 100, 500);
     }
     public void cancelTimerTask(){
         timer.cancel();

@@ -57,11 +57,14 @@ public class ImageProcessor {
     public static int cannyEdgeThres1 = 40;
     public static int cannyEdgeThres2 = 60;
 
+    public static int cannyEdgeThres1_piece = 20;
+    public static int cannyEdgeThres2_piece = 40;
+
     public static int houghLinesThres = 80;
     public static int houghLinesMinLineLength = 200;
     public static int houghLinesMaxLineGap = 100;
     public static int binaryThres = 120;
-    public static int chessboardDetectThres = 3;
+    public static int chessboardDetectThres = 4;
 
 
     private Bitmap currentBitmap;
@@ -81,7 +84,7 @@ public class ImageProcessor {
     public static final int AOI_canny_thres = 80;
 
     public static final int occpancy_change_thres = 40;
-    public static final int occpancy_thres = 10;
+    public static final int occpancy_thres = 40;
     public static final int color_thres = 100;
 
     static Point[][] detectedChessboardModel;
@@ -202,7 +205,7 @@ public class ImageProcessor {
         blurMat = blurAndAT(grayMat);
 
         //Log.d("THRES", cannyEdgeThres1 + " " + cannyEdgeThres2);
-        Imgproc.Canny(blurMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
+        Imgproc.Canny(blurMat, cannyEdges, cannyEdgeThres1_piece, cannyEdgeThres2_piece);
 
         //Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
         //Imgproc.dilate(binaryMat, binaryMat, kernelDilate);
@@ -367,6 +370,7 @@ public class ImageProcessor {
 
     public static Match MatchChessboard(List<List<Point>> intersectPoints){
         Point[][] matchPoints = null;
+        Mat matchTransform  = null;
 
         /**  match chessboard part **/
         if(intersectPoints.size() > 8 && intersectPoints.get(0).size() > 8) {
@@ -394,7 +398,7 @@ public class ImageProcessor {
                     //Log.d("Distance", "Distance to model reference: " + bD);
 
                     if (bD < minDistance && bD < chessboardDetectThres) {
-                        chessboardMatchTransform = recentAppliedTransform;
+                        matchTransform = recentAppliedTransform;
                         detectedChessboardModel = chessboardModel;
                         matchPoints = detectedChessboardModel;
                         minDistance = bD;
@@ -414,7 +418,9 @@ public class ImageProcessor {
         loadImageToImageView();
 
          */
-        return new Match(matchPoints, chessboardMatchTransform);
+        if (matchPoints != null)
+            return new Match(matchPoints, matchTransform);
+        return null;
 
     }
 
@@ -664,15 +670,15 @@ public class ImageProcessor {
         return count/64;
     }
 
-    public static char[][] getPieceColor(int[][] currE, int[][] refE, int[][] curr_PieceIntensity, int[][] last_PieceIntensity, int[][] curr_intenDev, char[][] lastPcl){
+    public static char[][] getPieceColor(int[][] currE, int[][] refE, int[][] curr_PieceIntensity, int[][] last_PieceIntensity, int[][] curr_intenDev, char[][] lastPcl, int[][] currIntensity){
         char[][] pieces = new char[8][8];
         //int[][] pieceOcc = getOccupancy(currE, reE);
 
         for(int i = 0; i < 8; i ++)
             for(int j = 0; j < 8; j ++){
-                if (currE[i][j] - refE[i][j] > occpancy_thres || curr_intenDev[i][j] > 7){
+                if (currE[i][j] - refE[i][j] > occpancy_thres){
                     //pieces[i][j] = getColor(i, j, currI, refI, lastPcl);
-                    if (curr_PieceIntensity[i][j] < 25)
+                    if (curr_PieceIntensity[i][j] < 80)
                         pieces[i][j] = CameraFragment.B;
                     else
                         pieces[i][j] = CameraFragment.W;
@@ -682,10 +688,16 @@ public class ImageProcessor {
                 } else{
                     if (lastPcl[i][j] != CameraFragment.E && Math.abs(last_PieceIntensity[i][j] - curr_PieceIntensity[i][j]) > 20){
                         // capture
-                        if (curr_PieceIntensity[i][j] - last_PieceIntensity[i][j] > 0)
+                        if ((i+j)%2 == 1){
+                            if(currIntensity[i][j] > 50)
+                                pieces[i][j] = CameraFragment.W;
+                            else
+                                pieces[i][j] = CameraFragment.B;
+                        } else if (curr_PieceIntensity[i][j] - last_PieceIntensity[i][j] > 0)
                             pieces[i][j] = CameraFragment.W;
                         else
                             pieces[i][j] = CameraFragment.B;
+
                     }else
                         pieces[i][j] = lastPcl[i][j];
                 }
@@ -998,11 +1010,11 @@ public class ImageProcessor {
                 Point end = new Point(blockSize * (i + 1) - AOI_indent, blockSize * (j + 1) - AOI_indent);
                 Mat block = grayMat.submat((int) start.x, (int) end.x, (int) start.y, (int) end.y);
                 //double mu = Core.mean(block).val[0];
-                MatOfDouble mStdDev = new MatOfDouble();
-                Core.meanStdDev(block, new MatOfDouble(), mStdDev);
+                //MatOfDouble mStdDev = new MatOfDouble();
+                //Core.meanStdDev(block, new MatOfDouble(), mStdDev);
 
                 //TermCriteria criteria = new TermCriteria(TermCriteria.MAX_ITER, 10, 1.0);
-                TermCriteria criteria = new TermCriteria(TermCriteria.MAX_ITER, 100, 0.01);
+                TermCriteria criteria = new TermCriteria(TermCriteria.MAX_ITER, 50, 0.1);
                 Mat clusteredIntensities = new Mat();
                 Mat centers = new Mat();
 
@@ -1021,7 +1033,7 @@ public class ImageProcessor {
                 block.convertTo(block32f, CvType.CV_32F);
 
                  */
-                Core.kmeans(samples, 2, clusteredIntensities, criteria, 10, Core.KMEANS_PP_CENTERS, centers);
+                Core.kmeans(samples, 2, clusteredIntensities, criteria, 5, Core.KMEANS_PP_CENTERS, centers);
                 //Imgproc.putText(chessboardMat, (int)mu + "", new Point(start.x,start.y), Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(150,255, 23));
                 //int label1 = (int) clusteredIntensities.get(0, 0)[0];
                 //int label2 = (int) clusteredIntensities.get(1, 0)[0];
@@ -1148,7 +1160,7 @@ public class ImageProcessor {
             src = drawPoint(src, pointsAndTranf.points);
             for(int i = 0; i < 8; i ++)
                 for(int j = 0; j < 8; j ++){
-                    //Imgproc.putText(src, " E: "+ edges[i][j] + "\n I: " + (int)intensities[i][j], pointsAndTranf.points[i][j], Core.FONT_HERSHEY_COMPLEX, 3, new Scalar(255,0, 0,255), 4);
+                    //Imgproc.putText(src, " E: "+ edges[i][j] + "\n I: " + (int)intensities[i][j], mPointsAndTranf.points[i][j], Core.FONT_HERSHEY_COMPLEX, 3, new Scalar(255,0, 0,255), 4);
                     Log.d("Info", " E: "+ edges[i][j] + ", I: " + intensities[i][j]);
                 }
             // put data in original mat

@@ -35,7 +35,6 @@ import androidx.fragment.app.Fragment;
 
 import static com.example.ChessPlayerApp.robot_arm.Chess.ChessFragment.getNextMove;
 import static com.example.ChessPlayerApp.robot_arm.Chess.TheEngine.terminal;
-import static com.example.ChessPlayerApp.robot_arm.Chess.TheEngine.whiteTurn;
 import static com.example.ChessPlayerApp.robot_arm.Chess.TheUserInterface.drawBoardPieces;
 
 
@@ -71,19 +70,24 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     Mode ImgProMethod = Mode.HoughLine;
 
     Button caliBtn;
-    Button moveBtn;
+    Button showBtn_PI;
     Button gameModeButton;
-    Button matchModeButton;
+    Button showBtn_Edge;
+
+    boolean showPI = false;
+    boolean showEdge = false;
+    boolean showPCL = false;
 
     boolean calibrated = false;
 
 
-    public static int[][] curr_Intensity_raw = new int[8][8];
-    public static int[][] curr_Edges_raw = new int[8][8];
-    public static int[][] curr_PieceIntensity_raw = new int[8][8];
+    public static int[][] curr_Intensity = new int[8][8];
+
+    public static int[][] curr_Edges = new int[8][8];
+    public static int[][] curr_PI = new int[8][8];
     public static int[][] curr_IntensityDev_raw = new int[8][8];
 
-    public static int[][] last_PieceIntensity_raw = new int[8][8];
+    public static int[][] last_PI = new int[8][8];
 
     public static int[][] last_Intensity = new int[8][8];
     public static int[][] last_Edges = new int[8][8];
@@ -91,8 +95,10 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     public static Mat ref_AOI = null;
     public static Mat AOI = null;
 
-    int[][] currIntensities = null;
-    int[][] currEdges = null;
+    public static Match mPointsAndTranf = null;
+
+    //int[][] currIntensities = null;
+
 
 
     // localtion of white piece and black piece
@@ -157,12 +163,15 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             }
         });
 
-        matchModeButton = root.findViewById(R.id.btn_2);
-        matchModeButton.setOnClickListener(new View.OnClickListener(){
+        showBtn_Edge = root.findViewById(R.id.btn_2);
+        showBtn_Edge.setOnClickListener(new View.OnClickListener(){
 
             @Override
             public void onClick(View v) {
-                ImgProMethod = Mode.MatchChessBoard;
+                //ImgProMethod = Mode.MatchChessBoard;
+                showPI = false;
+                showEdge = true;
+                showPCL = false;
             }
         });
 
@@ -174,14 +183,17 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             // This mode can only be used before game start, otherwise after the board occupied, the calibration gives wrong reference data of empty board.
             @Override
             public void onClick(View v) {
-                if(currEdges != null && currIntensities != null){
-                    copyIntArr(currEdges, last_Edges);
-                    copyIntArr(currIntensities, last_Intensity);
-                    copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
-                    ref_AOI = AOI;
+                ImgProMethod = Mode.CalibrateChessBoard;
+                /*
+                if(curr_Edges != null){
+                    //copyIntArr(currEdges, last_Edges);
+                    //copyIntArr(currIntensities, last_Intensity);
+                    //copyIntArr(curr_PI, last_PI);
+                    //ref_AOI = AOI;
 
                     // edited
                     // find the rotate angle, only check when the game is not started yet
+
                     if (!calibrated){
                         calibrated = true;
                         int bottomRow = 0;
@@ -190,12 +202,12 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                         int rightColumn = 0;
                         // bottom and top
                         for (int j = 0; j < 8; j ++){
-                            bottomRow += curr_Intensity_raw[6][j] + curr_Intensity_raw[7][j];
-                            topRow += curr_Intensity_raw[0][j] + curr_Intensity_raw[1][j];
+                            bottomRow += curr_Intensity[6][j] + curr_Intensity[7][j];
+                            topRow += curr_Intensity[0][j] + curr_Intensity[1][j];
                         }
                         for (int i = 0; i < 8; i ++){
-                            leftColumn += curr_Intensity_raw[i][0] + curr_Intensity_raw[i][1];
-                            rightColumn += curr_Intensity_raw[i][6] + curr_Intensity_raw[i][7];
+                            leftColumn += curr_Intensity[i][0] + curr_Intensity[i][1];
+                            rightColumn += curr_Intensity[i][6] + curr_Intensity[i][7];
                         }
 
                         int dark = Math.min(Math.min(Math.min(bottomRow, topRow), leftColumn), rightColumn);
@@ -212,37 +224,27 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                         //rotateArray(last_Intensity, rotate_angle);
                         //rotateArray(last_Edges, rotate_angle);
                     }
-                    Log.d("CaliAngle", "the rotate angle is: " + rotate_angle);
 
+                    //Log.d("CaliAngle", "the rotate angle is: " + rotate_angle);
                 }
+                */
+
                 lastPcl = new char[8][8];
                 updatePcl(lastPcl, TheEngine.theBoard);
                 //if (TheEngine.gameStarted)
                 printPcl(lastPcl);
 
-
-                /*
-                if(!firstClicked_cali){
-                    firstClicked_cali = true;
-                    ImgProMethod = Mode.CalibrateChessBoard;
-                }else{
-                    // calibrate mode
-                    // Do calibration, only after you see the matchBoard, edges no and intensity are well shown can you click for the second time.
-                    // Boolean Calibrate(Mat currImg)
-                    if (calibrated) {
-                        ImgProMethod = Mode.Normal;
-                        firstClicked_cali = false;
-                    }
-                }
-
-                 */
             }
         });
 
-        moveBtn = root.findViewById(R.id.btn_4);
-        moveBtn.setOnClickListener(new View.OnClickListener() {
+        showBtn_PI = root.findViewById(R.id.btn_4);
+        showBtn_PI.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                showPI = true;
+                showEdge = false;
+                showPCL = false;
+                /*
                 // if game start, white turn,
                 if (TheEngine.whiteTurn && TheEngine.gameStarted){
                     // check pcl
@@ -257,15 +259,17 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                         String query = terminal("myMove,"+myMove);
 
                         copyCharArr(currPcl, lastPcl);
-                        copyIntArr(currEdges, last_Edges);
-                        copyIntArr(currIntensities, last_Intensity);
-                        copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
+                        copyIntArr(curr_Edges, last_Edges);
+                        //copyIntArr(currIntensities, last_Intensity);
+                        copyIntArr(curr_PI, last_PI);
 
                         AIWork();
                     }else{
                         Log.d("MyMove", "Not a valid move, please try again.");
                     }
                 }
+
+                 */
             }
         });
 
@@ -369,66 +373,92 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         }
     }
 
-    public Mat GameMonitor(Mat src){
-
+    public Mat CalibrateMode(Mat src){
         Mat grayMat = new Mat();
         Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-
-        // get transformMat and chessboard points
         List<List<Point>> boardPoints = ImageProcessor.ClusterLinesAndIntersection(grayMat);
-        Match pointsAndTranf = ImageProcessor.MatchChessboard(boardPoints);
-        // get intensifies and edges
-        if (pointsAndTranf.points != null){
-            AOI = ImageProcessor.tranformInterestArea(grayMat, pointsAndTranf.tranf);
-            Mat AOI_color = ImageProcessor.tranformInterestArea(src, pointsAndTranf.tranf);
-            //Mat diff_AOI = AOI;
+        Match pt = ImageProcessor.MatchChessboard(boardPoints);
+
+        if (pt != null){
+            mPointsAndTranf = pt;
+            src = ImageProcessor.drawPoint(src, mPointsAndTranf.points);
+        }
+
+        if (mPointsAndTranf != null){
+            updateCurrEdgeAndIntensity(src);
+            // store reference edges and intensities
+            copyIntArr(curr_Edges, last_Edges);
+            //copyIntArr(currIntensities, last_Intensity);
+            copyIntArr(curr_PI, last_PI);
+        }
+
+
+        if(!calibrated)
+            calibrated = true;
+
+        return src;
+    }
+
+    public void updateCurrEdgeAndIntensity(Mat src){
+        Mat grayMat = new Mat();
+        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
+        AOI = ImageProcessor.tranformInterestArea(grayMat, mPointsAndTranf.tranf);
+        Mat AOI_color = ImageProcessor.tranformInterestArea(src, mPointsAndTranf.tranf);
+        //Mat diff_AOI = AOI;
             /*
             if (ref_AOI != null) {
                 Core.absdiff(AOI, ref_AOI, diff_AOI);
                 diff_AOI = normalize(diff_AOI);
             }
+            */
+        edgeFilter.update(ImageProcessor.getEdges(AOI));
+        intensityFilter.update(ImageProcessor.getIntensity(AOI));
+        pieceIntenFilter.update(ImageProcessor.getPieceIntensity(AOI_color));
+        //intenDevFilter.update(ImageProcessor.getIntensityDev(AOI));
 
-             */
-
-
-            edgeFilter.update(ImageProcessor.getEdges(AOI));
-            intensityFilter.update(ImageProcessor.getIntensity(AOI));
-            pieceIntenFilter.update(ImageProcessor.getPieceIntensity(AOI_color));
-            intenDevFilter.update(ImageProcessor.getIntensityDev(AOI));
-
-
-
-
-            curr_Intensity_raw = intensityFilter.getAvg();
-            curr_Edges_raw = edgeFilter.getAvg();
-            curr_PieceIntensity_raw = pieceIntenFilter.getAvg();
-            curr_IntensityDev_raw = intenDevFilter.getAvg();
+        curr_Intensity = intensityFilter.getAvg();
+        curr_Edges = edgeFilter.getAvg();
+        curr_PI = pieceIntenFilter.getAvg();
+    }
 
 
+    public Mat GameMonitor(Mat src){
+
+        showPCL = true;
+
+        // Using the Tranf from calibration
+        if (mPointsAndTranf != null){
+            // get intensifies and edges
+            updateCurrEdgeAndIntensity(src);
+
+            //currIntensities = curr_Intensity;
+                    //rotateArray(curr_Intensity, rotate_angle);
 
 
-            currIntensities = curr_Intensity_raw;
-                    //rotateArray(curr_Intensity_raw, rotate_angle);
-            currEdges = curr_Edges_raw;
-            //rotateArray(curr_Edges_raw, rotate_angle);
+            //rotateArray(curr_Edges, rotate_angle);
 
             //printPcl(lastPcl);
-            printIntArr(currEdges);
-            printIntArr(currIntensities);
+            printIntArr(curr_Edges);
+            //printIntArr(currIntensities);
 
-            src = ImageProcessor.drawPoint(src, pointsAndTranf.points);
+            src = ImageProcessor.drawPoint(src, mPointsAndTranf.points);
             //AOI = ImageProcessor.Canny2(AOI);
             //AOI.copyTo(src);
             //last_Intensity = intensities;
             //last_Edges = edges;
             if (calibrated){
-                currPcl = ImageProcessor.getPieceColor(currEdges, last_Edges, curr_PieceIntensity_raw, last_PieceIntensity_raw, curr_IntensityDev_raw, lastPcl);
+                currPcl = ImageProcessor.getPieceColor(curr_Edges, last_Edges, curr_PI, last_PI, curr_IntensityDev_raw, lastPcl, curr_Intensity);
                 printPcl(currPcl);
                 // Show currPcl on mat
                 for(int i = 0; i < 8; i ++)
                     for(int j = 0; j < 8; j ++){
-                        Imgproc.putText(src, " "+ currPcl[i][j], pointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
-                        //Imgproc.putText(src, ""+ currIntensities[i][j], pointsAndTranf.points[i][j+1], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        if(showPCL)
+                            Imgproc.putText(src, " "+ currPcl[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        else if(showPI)
+                            Imgproc.putText(src, " "+ lastPcl[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        else if(showEdge)
+                            Imgproc.putText(src, " "+ curr_Intensity[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                        //Imgproc.putText(src, ""+ currIntensities[i][j], mPointsAndTranf.points[i][j+1], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Log.d("Info", " E: "+ currEdges[i][j] + ", I: " + currIntensities[i][j]);
                     }
                 if (ChessFragment.wTurn){
@@ -439,17 +469,18 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                         //currPcl[6][7] = '*';
                         //currPcl[5][7] = 'w';
                         String myMove = MoveCalculator.getMove(lastPcl, currPcl);
-                        //printPcl(lastPcl);
-                        //printPcl(currPcl);
+                        printPcl(lastPcl);
+                        printPcl(currPcl);
                         Log.d("MyMove", "move: " + myMove);
                         if (myMove != "" && validMove(myMove)){
+                            Log.d("MyMove","White turn: It's a valid move.");
                             String query = terminal("myMove,"+myMove);
 
                             copyCharArr(currPcl, lastPcl);
 
-                            copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
-                            copyIntArr(currEdges, last_Edges);
-                            copyIntArr(currIntensities, last_Intensity);
+                            copyIntArr(curr_PI, last_PI);
+                            copyIntArr(curr_Edges, last_Edges);
+                            //copyIntArr(currIntensities, last_Intensity);
 
 
                             AIWork();
@@ -460,10 +491,11 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                     // calculate its move
                 }else if(!ChessFragment.wTurn){
                     if (matchPclwithTheBoard(currPcl, TheEngine.theBoard)){
-                        copyIntArr(curr_PieceIntensity_raw, last_PieceIntensity_raw);
-                        copyIntArr(currEdges, last_Edges);
-                        copyIntArr(currIntensities, last_Intensity);
-                        copyCharArr(currPcl, lastPcl);
+                        copyIntArr(curr_PI, last_PI);
+                        copyIntArr(curr_Edges, last_Edges);
+                        //copyIntArr(currIntensities, last_Intensity);
+                        updatePcl(lastPcl, TheEngine.theBoard);
+                        //copyCharArr(currPcl, lastPcl);
 
                         ChessFragment.wTurn = !ChessFragment.wTurn;
 
@@ -588,6 +620,10 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 src = GameMonitor(src);
                 break;
 
+            case CalibrateChessBoard:
+                src = CalibrateMode(src);
+                break;
+
             case MatchChessBoard:
                 Point[][] chessPoints  = ImageProcessor.MatchChessboard(ImageProcessor.ClusterLinesAndIntersection(grayMat)).points;
                 src = ImageProcessor.drawPoint(src, chessPoints);
@@ -601,6 +637,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 //Imgproc.cvtColor(mRgba, grayMat, Imgproc.COLOR_BGR2GRAY);
                 Mat lines = ImageProcessor.HoughLines(grayMat);
                 src = ImageProcessor.drawLines(src, lines);
+                break;
         }
 
         //Log.d("CameraTest", "It capture frame.");
