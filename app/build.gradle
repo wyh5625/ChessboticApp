@@ -44,6 +44,16 @@ android {
             path file('src/main/jni/Android.mk')
         }
     }
+    /*    tasks.withType(JavaCompile) {
+        configure(options) {
+            options.encoding = 'UTF-8'
+            options.debug = true
+            options.failOnError = true
+            options.warnings = true
+            options.compilerArgs << '-Xlint:deprecation' << '-Xlint:unchecked'
+            //println 'Compiler args: ' + options.compilerArgs
+        }
+    }*/
 /*
     // Recompile with -Xlint:deprecation for details
     tasks.withType(JavaCompile) {
