@@ -122,6 +122,11 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
         }
     };
 
+    private void requestBleBlueToothPermission() {
+        ActivityCompat.requestPermissions(RobotArmControllerActivity.this,
+                new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+                0);
+    }
     private void requestCameraPermission() {
         // Permission has not been granted and must be requested.
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -161,7 +166,7 @@ public class RobotArmControllerActivity extends ScanBaseActivity{
         });
 
          */
-
+        requestBleBlueToothPermission();
         requestCameraPermission();
 
         // save one copy of each fragment
