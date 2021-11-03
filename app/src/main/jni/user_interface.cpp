@@ -1,7 +1,5 @@
 #include "includes.h"
 #include "user_interface.h"
-#include "../../../../../../AppData/Local/Android/Sdk/ndk-bundle/sources/cxx-stl/llvm-libc++/include/iosfwd"
-
 
 // Save the next message to be displayed (regardind last command)
 

@@ -11,7 +11,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_CPP_FEATURES += exceptions
 
-LOCAL_C_INCLUDES += .
-LOCAL_C_INCLUDES += C:\Users\wyh56\AndroidStudioProjects\android-fundamentals-starter-apps-v2-master\StartBLE\app\src\debug\jni
+#LOCAL_C_INCLUDES += .
+
 
 include $(BUILD_SHARED_LIBRARY)
