@@ -1,5 +1,6 @@
 package com.example.ChessPlayerApp.robot_arm.Recognition;
 
+import android.content.Context;
 import android.os.Bundle;
 
 import android.util.Log;
@@ -27,6 +28,13 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -66,6 +74,8 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     private MenuItem mItemSwitchCamera = null;
 
     private Mat currImg = null;
+    // only update once
+    private Match pt;
 
     Mode ImgProMethod = Mode.HoughLine;
 
@@ -79,6 +89,13 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
     boolean showPCL = false;
 
     boolean calibrated = false;
+
+    int updateCount = 0;
+    int period = 40;
+    Mat lines;
+
+    String gridPointsFileName = "chessboard_model.txt";
+    String gridTransformFileName = "chessboard_tf.txt";
 
 
     public static int[][] curr_Intensity = new int[8][8];
@@ -237,6 +254,40 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             }
         });
 
+        caliBtn.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                // TODO Auto-generated method stub
+                String cornerData = readInternalFile(getContext(), gridPointsFileName);
+                String tfData = readInternalFile(getContext(), gridTransformFileName);
+
+
+                if(cornerData != null && cornerData != null){
+                    String[] cornerDataSplited = cornerData.split("\\s+");
+                    String[] tfDataSplited = tfData.split("\\s+");
+
+                    Point[][] ps = new Point[9][9];
+                    for(int i = 0; i < 9; i ++){
+                        for(int j = 0; j < 9; j++){
+                            Point p = new Point(Double.parseDouble(cornerDataSplited[18*i+2*j+0]),Double.parseDouble(cornerDataSplited[18*i+2*j+1]));
+                            ps[i][j] = p;
+                        }
+                    }
+                    Mat tfMat = new Mat(3,3,org.opencv.core.CvType.CV_64FC1);
+                    double[][] tf_data = new double[3][3];
+                    for(int i = 0; i < 3; i ++) {
+                        for (int j = 0; j < 3; j++) {
+                            tf_data[i][j] = Double.parseDouble(tfDataSplited[3*i + j]);
+                        }
+                        tfMat.put(i,0,tf_data[i]);
+                    }
+                    pt = new Match(ps, tfMat);
+                    mPointsAndTranf = pt;
+                }
+                return true;
+            }
+        });
+
         showBtn_PI = root.findViewById(R.id.btn_4);
         showBtn_PI.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -321,10 +372,20 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             }
     }
 
-
+    private void updateChessboardUI() {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                drawBoardPieces();
+            }
+        });
+    }
 
     public void AIWork(){
-        drawBoardPieces();
+
+        //drawBoardPieces();
+        updateChessboardUI();
+
         ChessFragment.wTurn = !ChessFragment.wTurn;
 
 
@@ -373,18 +434,92 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         }
     }
 
+    public void writeFileOnInternalStorage(Context mcoContext, String sFileName, String sBody){
+        File dir = new File(mcoContext.getFilesDir(), "chessboard_data");
+        if(!dir.exists()){
+            dir.mkdir();
+        }
+        try {
+            File gpxfile = new File(dir, sFileName);
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append(sBody);
+            writer.flush();
+            writer.close();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private String readInternalFile(Context mContext, String sFileName){
+
+        String folder = mContext.getFilesDir().getAbsolutePath() + File.separator + "chessboard_data";
+        File file = new File(folder, sFileName);
+
+        if (!file.exists()) {
+            return null;
+        }
+
+        FileInputStream fis = null;
+        String textContent = "";
+
+        try {
+            fis = new FileInputStream(file);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+            textContent = br.readLine();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return textContent;
+    }
+
     public Mat CalibrateMode(Mat src){
         Mat grayMat = new Mat();
-        Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
-        List<List<Point>> boardPoints = ImageProcessor.ClusterLinesAndIntersection(grayMat);
-        Match pt = ImageProcessor.MatchChessboard(boardPoints);
 
-        if (pt != null){
-            mPointsAndTranf = pt;
-            src = ImageProcessor.drawPoint(src, mPointsAndTranf.points);
+        updateCount ++;
+        if (updateCount > period && pt == null){
+            updateCount = 0;
+
+            Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
+            List<List<Point>> boardPoints = ImageProcessor.ClusterLinesAndIntersection(grayMat);
+            pt = ImageProcessor.MatchChessboard(boardPoints);
+            if (pt != null){
+                mPointsAndTranf = pt;
+                // write pt to internal storage
+                String pointsString = "";
+                for(int i = 0; i < 9; i++){
+                    for(int j = 0; j < 9; j++){
+                        pointsString += pt.points[i][j].x + " " + pt.points[i][j].y + " ";
+                    }
+                }
+                String transformString = "";
+                for(int i = 0; i < 3; i++) {
+                    for (int j = 0; j < 3; j++) {
+                        transformString += pt.tranf.get(i,j)[0] + " ";
+                    }
+                }
+                Log.e("Match data", pointsString);
+                Log.e("Match data", transformString);
+                Log.e("Match data", "" + pt.tranf.type());
+                Log.e("Match data", pt.tranf.toString());
+                //Log.e("Match data", pt.tranf.toString());
+
+                writeFileOnInternalStorage(getContext(), gridPointsFileName, pointsString);
+                writeFileOnInternalStorage(getContext(), gridTransformFileName, transformString);
+            }
         }
 
         if (mPointsAndTranf != null){
+            src = ImageProcessor.drawPoint(src, mPointsAndTranf.points);
+
             updateCurrEdgeAndIntensity(src);
             // store reference edges and intensities
             copyIntArr(curr_Edges, last_Edges);
@@ -432,7 +567,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             updateCurrEdgeAndIntensity(src);
 
             //currIntensities = curr_Intensity;
-                    //rotateArray(curr_Intensity, rotate_angle);
+            //rotateArray(curr_Intensity, rotate_angle);
 
 
             //rotateArray(curr_Edges, rotate_angle);
@@ -455,9 +590,9 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                         if(showPCL)
                             Imgproc.putText(src, " "+ currPcl[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         else if(showPI)
-                            Imgproc.putText(src, " "+ lastPcl[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                            Imgproc.putText(src, " "+ curr_PI[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         else if(showEdge)
-                            Imgproc.putText(src, " "+ curr_Intensity[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
+                            Imgproc.putText(src, " "+ curr_Edges[i][j], mPointsAndTranf.points[i+1][j], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Imgproc.putText(src, ""+ currIntensities[i][j], mPointsAndTranf.points[i][j+1], Core.FONT_HERSHEY_COMPLEX, 0.6, new Scalar(255,255, 255,255), 1);
                         //Log.d("Info", " E: "+ currEdges[i][j] + ", I: " + currIntensities[i][j]);
                     }
@@ -526,12 +661,12 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
             if(theBoard[k] == '*')
                 if(thePcl[i][j] != E)
                     return false;
-            else if(Character.isLowerCase(theBoard[k]))
-                if (thePcl[i][j] != B)
-                    return false;
-            else
-                if (thePcl[i][j] != W)
-                    return false;
+                else if(Character.isLowerCase(theBoard[k]))
+                    if (thePcl[i][j] != B)
+                        return false;
+                    else
+                    if (thePcl[i][j] != W)
+                        return false;
         }
         return true;
 
@@ -612,8 +747,12 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
         Mat src = inputFrame.rgba();
         //Mat processed = null;
         Mat grayMat = new Mat();
+        Mat hsvMat = new Mat();
+        List<Mat> channels = new ArrayList<Mat>(3);
         Imgproc.cvtColor(src, grayMat, Imgproc.COLOR_BGR2GRAY);
+        //Core.split(hsvMat, channels);
         currImg = src;
+        //grayMat = channels.get(0);
 
         switch (ImgProMethod){
             case MonitorGame:
@@ -621,6 +760,7 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
                 break;
 
             case CalibrateChessBoard:
+
                 src = CalibrateMode(src);
                 break;
 
@@ -635,8 +775,16 @@ public class CameraFragment extends Fragment implements  CameraBridgeViewBase.Cv
 
             case HoughLine:
                 //Imgproc.cvtColor(mRgba, grayMat, Imgproc.COLOR_BGR2GRAY);
-                Mat lines = ImageProcessor.HoughLines(grayMat);
-                src = ImageProcessor.drawLines(src, lines);
+//                updateCount ++;
+//                if(updateCount > period){
+//                    updateCount = 0;
+//                    lines = ImageProcessor.HoughLines(grayMat);
+//                    //ImageProcessor.drawLines(src, lines);
+//                }
+//                if(lines != null)
+//                    ImageProcessor.drawLines(src, lines);
+                src = ImageProcessor.Canny(grayMat);
+
                 break;
         }
 

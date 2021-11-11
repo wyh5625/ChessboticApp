@@ -23,13 +23,13 @@ public class RoboticArm implements Gripper {
 
     // static value
     public static double gripperFloatHeight = 60;
-    public static double gripperGrabHeight = -15;
+    public static double gripperGrabHeight = -5;
     public static double gripperGrabHeight2 = 0;
     public static double gripperFloatOffset = 15;
 
     // gripper value
-    public static double openAmount = 40;
-    public static double closeAmount = 0;
+    public static double openAmount = 0;
+    public static double closeAmount = 50;
 
     public RoboticArm(BluetoothLeService bls, double block_size, double distanceToBoard){
         this.myBluetooth = bls;

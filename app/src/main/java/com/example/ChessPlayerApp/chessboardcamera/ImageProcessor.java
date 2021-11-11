@@ -55,16 +55,16 @@ public class ImageProcessor {
 
     // value
     public static int cannyEdgeThres1 = 40;
-    public static int cannyEdgeThres2 = 60;
+    public static int cannyEdgeThres2 = 100;
 
     public static int cannyEdgeThres1_piece = 20;
     public static int cannyEdgeThres2_piece = 40;
 
     public static int houghLinesThres = 80;
     public static int houghLinesMinLineLength = 200;
-    public static int houghLinesMaxLineGap = 100;
+    public static int houghLinesMaxLineGap = 30;
     public static int binaryThres = 120;
-    public static int chessboardDetectThres = 4;
+    public static int chessboardDetectThres = 9;
 
 
     private Bitmap currentBitmap;
@@ -134,12 +134,12 @@ public class ImageProcessor {
         //Imgproc.threshold(grayMat, grayMat, binaryThres, 255, Imgproc.THRESH_BINARY);
 
         // ksize must be odd, otherwise it will halt
-        Imgproc.medianBlur(grayMat, grayMat, 3);
+        Imgproc.medianBlur(grayMat, blurMat, 7);
 
         //Imgproc.threshold(grayMat, blurMat, binaryThres, 255, Imgproc.THRESH_BINARY);
-        Imgproc.adaptiveThreshold(grayMat, blurMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 77, 0);
+        //Imgproc.adaptiveThreshold(grayMat, blurMat, 255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY, 9, 0);
 
-
+        //Imgproc.medianBlur(blurMat, blurMat, 5);
 
         return blurMat;
     }
@@ -178,13 +178,14 @@ public class ImageProcessor {
         Mat blurMat;
 
 
-        blurMat = cvtBinary(grayMat);
+        //blurMat = cvtBinary(grayMat);
 
         //Log.d("THRES", cannyEdgeThres1 + " " + cannyEdgeThres2);
-        Imgproc.Canny(blurMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
+        Imgproc.Canny(grayMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
 
-        //Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
-        //Imgproc.dilate(binaryMat, binaryMat, kernelDilate);
+        Mat kernelDilate = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(15,15));
+        Imgproc.dilate(cannyEdges, cannyEdges, kernelDilate);
+        Imgproc.Canny(grayMat, cannyEdges, cannyEdgeThres1, cannyEdgeThres2);
 
         //Mat kernelErode = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
         //Imgproc.erode(binaryMat, binaryMat, kernelErode);
@@ -408,6 +409,9 @@ public class ImageProcessor {
                 }
 
             Log.d("MinChessoBardDistance", "Sum of chessboard difference: " + minDistance);
+
+        }else{
+            Log.d("MinChessoBardDistance", "Not enough intersection points!");
 
         }
 
@@ -1025,7 +1029,7 @@ public class ImageProcessor {
                             samples.put(x + y*block.cols(), z, block.get(y,x)[z]);
                         }
                     }
-                    }
+                }
                 /*
                 block = block.clone();
                 block = block.reshape(1, 1);

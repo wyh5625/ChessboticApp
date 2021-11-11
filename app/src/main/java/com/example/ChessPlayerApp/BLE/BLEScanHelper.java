@@ -52,10 +52,10 @@ public class BLEScanHelper {
     private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            Log.d("BLE_DEBUG", "Scan_Result: " + result.getDevice().getAddress());
+            Log.d("BLE_DEBUG", "Scan_Result: " + result.getDevice().getAddress() + " " + result.getDevice().getName());
             if (mDeviceListAdapter != null) {
                 if (result.getDevice().getType() == BluetoothDevice.DEVICE_TYPE_LE && !mDeviceListAdapter.containDevice(result.getDevice())) {
-                        mDeviceListAdapter.addDevice(result.getDevice());
+                    mDeviceListAdapter.addDevice(result.getDevice());
                 }
             } else if (mSpinAdaptor != null){
                 for (int i = 0; i < mSpinAdaptor.getCount(); i++){
@@ -132,7 +132,8 @@ public class BLEScanHelper {
             }, SCAN_PERIOD);
 
             mScanning = true;
-            mBluetooth.getBluetoothLeScanner().startScan(filters, new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCallback);
+            // without using filter
+            mBluetooth.getBluetoothLeScanner().startScan(scanCallback);
         } else {
             mScanning = false;
             mBluetooth.getBluetoothLeScanner().stopScan(scanCallback);
